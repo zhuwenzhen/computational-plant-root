@@ -111,3 +111,20 @@ InfinitePartManipulate[vertices_, edges_, length_, opt_] := Block[
 		],
 	{i,1,Length[infEdges]-1,1}]
 ]
+
+
+(* ::Subsection:: *)
+(*End*)
+
+
+End[];
+
+
+(* ::Section:: *)
+(*End*)
+
+
+Protect /@ CornRootsFileReader`Private`$PublicSymbols;
+
+
+EndPackage[];
