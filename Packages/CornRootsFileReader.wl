@@ -9,7 +9,7 @@
 
 
 (* ::Text:: *)
-(*Write clear usage for each function*)
+(*Write clear usage for each function.*)
 
 
 (* ::Section:: *)
