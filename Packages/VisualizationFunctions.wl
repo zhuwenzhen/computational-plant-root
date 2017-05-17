@@ -19,6 +19,7 @@
 (* ::Text:: *)
 (*Write Manipulate function to visualize the loop. [Done]*)
 (*Implement options for several visualization functions*)
+(**)
 
 
 (* ::Section:: *)
@@ -28,7 +29,12 @@
 BeginPackage["VisualizationFunctions`"];
 
 
-VisualizationFunctions`Private`$PublicSymbols = {Graph3DLength, ExtractInfinitePart, ExtractInfiniteEdges, ShowIntersectionPointByIndex};
+VisualizationFunctions`Private`$PublicSymbols = {
+	Graph3DLength, 
+	ExtractInfinitePart, 
+	ExtractInfiniteEdges, 
+	RescalingParameter,
+	ShowIntersectionPointByIndex};
 
 
 Unprotect /@ VisualizationFunctions`Private`$PublicSymbols;
@@ -130,7 +136,7 @@ InfinitePartManipulate[vertices_, edges_, length_] := Block[
 	infEdges = edges[[infPositions]];
 	verticesSubset = vertices[[ Union[Flatten[infEdges]] ]];
 	minMaxOfVertices = MinMax /@ Transpose[verticesSubset];
-	boundingBox = $rescalingParameter[minMaxOfVertices];
+	boundingBox = RescalingParameter[minMaxOfVertices];
 	Manipulate[
 		Show[
 			Graphics3D[{
