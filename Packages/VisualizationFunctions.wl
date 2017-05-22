@@ -19,7 +19,6 @@
 (* ::Text:: *)
 (*Write Manipulate function to visualize the loop. [Done]*)
 (*Implement options for several visualization functions*)
-(**)
 
 
 (* ::Section:: *)
@@ -42,9 +41,6 @@ Unprotect /@ VisualizationFunctions`Private`$PublicSymbols;
 
 (* ::Section:: *)
 (*Usage*)
-
-
-Begin["`Private`"];
 
 
 $ArgStyle[arg_Integer] := "TR";
@@ -79,6 +75,9 @@ ExtractInfiniteEdges::usage = $UsageString[
 (*Implementation*)
 
 
+Begin["`Private`"];
+
+
 (* ::Subsection:: *)
 (*Graph3DLength*)
 
@@ -101,7 +100,7 @@ Graph3DLength[vts_, edges_, length_]:= Module[
 ExtractInfinitePart[vertices_,edges_, length_, color_] := Module[
 	{infPositions, infEdges},
 	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
-	infEdges = edges[[#]]&/@ infPositions;
+	infEdges = edges[[infPositions]];
 	Graphics3D[{color, GraphicsComplex[vertices, Line/@infEdges], Boxed -> False}]
 ]
 
@@ -109,7 +108,7 @@ ExtractInfinitePart[vertices_,edges_, length_, color_] := Module[
 ExtractInfiniteEdges[vertices_, edges_, length_] := Module[
 	{infPositions, infEdges},
 	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
-	infEdges = edges[[#]]&/@ infPositions;
+	infEdges = edges[[infPositions]];
 	infEdges
 ]
 
@@ -117,6 +116,15 @@ ExtractInfiniteEdges[vertices_, edges_, length_] := Module[
 (*ComputeBoundingBox[vertices_, infEdges_, offset_] := Block[
 	
 ]*)
+
+
+(* ::Subsection:: *)
+(*VisualizeRootGraphics3D*)
+
+
+VisualizeRootGraphics3D[vertices_, edges_, color_] := 
+	Graphics3D[
+		{color, GraphicsComplex[vertices, Line/@edges], Boxed -> False}]
 
 
 (* ::Subsection:: *)
