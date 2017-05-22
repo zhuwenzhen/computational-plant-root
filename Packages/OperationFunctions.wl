@@ -63,6 +63,9 @@ Graph3DLength::usage = $UsageString[
 (*Implementation*)
 
 
+Begin["`Private`"];
+
+
 (* ::Subsection:: *)
 (*GraphConvert*)
 
