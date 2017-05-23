@@ -33,7 +33,9 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	ExtractInfinitePart, 
 	ExtractInfiniteEdges, 
 	RescalingParameter,
-	ShowIntersectionPointByIndex};
+	ShowIntersectionPointByIndex,
+	VisualizeRootGraphics3D
+};
 
 
 Unprotect /@ VisualizationFunctions`Private`$PublicSymbols;
@@ -41,6 +43,9 @@ Unprotect /@ VisualizationFunctions`Private`$PublicSymbols;
 
 (* ::Section:: *)
 (*Usage*)
+
+
+Begin["`Private`"];
 
 
 $ArgStyle[arg_Integer] := "TR";
@@ -73,9 +78,6 @@ ExtractInfiniteEdges::usage = $UsageString[
 
 (* ::Section:: *)
 (*Implementation*)
-
-
-Begin["`Private`"];
 
 
 (* ::Subsection:: *)

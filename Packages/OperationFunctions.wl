@@ -41,6 +41,9 @@ Unprotect /@ OperationFunctions`Private`$PublicSymbols;
 (*Usage*)
 
 
+Begin["`Private`"];
+
+
 $ArgStyle[arg_Integer] := "TR";
 $ArgStyle["\[Ellipsis]"] := "TR";
 $ArgStyle[str_String] := "TI";
@@ -61,9 +64,6 @@ Graph3DLength::usage = $UsageString[
 
 (* ::Section:: *)
 (*Implementation*)
-
-
-Begin["`Private`"];
 
 
 (* ::Subsection:: *)
@@ -118,15 +118,16 @@ DisconnectGraph[graphData_, "Graph"]:= Module[
 
 
 DisconnectGraph[graphData_, "Data"]:= Module[
-	{g, vertices, vd3Position, degree3Vtx, triEdgePosition, 
+	{g, vertices, degree3Vtx, triEdgePosition, 
 	metaEdgesVertices, metaEdges, edges},
 	g = Graph[graphData];
 	vertices = VertexList[g]; 
-	vd3Position = FindVertexDegree3Position[graphData];
 	degree3Vtx = FindVertexDegree3[graphData];
-	edges = graphConvert[graphData];
+	edges = GraphConvert[graphData];
 	triEdgePosition = First @ Transpose[Flatten[Position[edges, #] &/@ degree3Vtx, 1]];
-	metaEdgesVertices = Delete[loopGraphVertices, vd3Position];
+	
+	metaEdgesVertices = Delete[vertices, degree3Vtx];
+	Print[metaEdgesVertices];
 	metaEdges = Delete[edges, {#} &/@ triEdgePosition];
 	MapThread[#1 <-> #2 &, Transpose @ metaEdges]
 ]
