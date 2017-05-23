@@ -117,7 +117,7 @@ DisconnectGraph[graphData_, "Graph"]:= Module[
 (*DisconnectGraph - Return data*)
 
 
-DisconnectGraph[graphData_, "Data"]:= Module[
+DisconnectGraph[graphData_, "MetagraphData"]:= Module[
 	{g, vertices, degree3Vtx, vd, vd3Position, triEdgePosition, 
 	metaEdgesVertices, metaEdges, edges, metaGraphData, groupedVertices},
 	g = Graph[graphData];
@@ -132,8 +132,13 @@ DisconnectGraph[graphData_, "Data"]:= Module[
 	
 	
 	metaEdges = Delete[edges, {#} &/@ triEdgePosition];
-	metaGraphData = MapThread[#1 <-> #2 &, Transpose @ metaEdges];
-	
+	metaGraphData = MapThread[#1 <-> #2 &, Transpose @ metaEdges]
+]
+
+
+DisconnectGraph[graphData_, "Data"]:= Module[
+	{metaGraphData, groupedVertices},
+	metaGraphData = DisconnectGraph[graphData, "MetagraphData"];
 	groupedVertices = ConnectedComponents[metaGraphData];
 	
 	Table[
@@ -143,6 +148,17 @@ DisconnectGraph[graphData_, "Data"]:= Module[
 		{i,1,Length[groupedVertices]}
 	]
 ]
+
+
+DisconnectGraph[graphData_, "Vertices"]:= Module[
+	{metaGraphData},
+	metaGraphData = DisconnectGraph[graphData, "MetagraphData"];
+	ConnectedComponents[metaGraphData]
+]
+
+
+(* ::Subsection:: *)
+(*DisconnectGraph - Return Vertices*)
 
 
 (* ::Subsection::Closed:: *)
@@ -172,7 +188,7 @@ ManipulateMetaEdge[graph_, groupedVertices_] :=
 	]
 
 
-ManipulateMetaEdge[graphData_List, groupedVertices_, groupedEdges_] :=
+ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 	Manipulate[
 		Graph[graphData, GraphHighlight -> groupedEdges[[i]]],
 		{i, 1, Length@groupedEdges, 1} 
