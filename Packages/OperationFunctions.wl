@@ -118,22 +118,34 @@ DisconnectGraph[graphData_, "Graph"]:= Module[
 
 
 DisconnectGraph[graphData_, "Data"]:= Module[
-	{g, vertices, degree3Vtx, triEdgePosition, 
-	metaEdgesVertices, metaEdges, edges},
+	{g, vertices, degree3Vtx, vd, vd3Position, triEdgePosition, 
+	metaEdgesVertices, metaEdges, edges, metaGraphData, groupedVertices},
 	g = Graph[graphData];
-	vertices = VertexList[g]; 
-	degree3Vtx = FindVertexDegree3[graphData];
+	vertices = VertexList[g];
+	vd = VertexDegree[g, #]&/@vertices;
+	vd3Position = Flatten @ Position[vd,3];
+	degree3Vtx = vertices[[vd3Position]];
+	
 	edges = GraphConvert[graphData];
 	triEdgePosition = First @ Transpose[Flatten[Position[edges, #] &/@ degree3Vtx, 1]];
+	metaEdgesVertices = Delete[vertices, Position[vd,3]];
 	
-	metaEdgesVertices = Delete[vertices, degree3Vtx];
-	Print[metaEdgesVertices];
+	
 	metaEdges = Delete[edges, {#} &/@ triEdgePosition];
-	MapThread[#1 <-> #2 &, Transpose @ metaEdges]
+	metaGraphData = MapThread[#1 <-> #2 &, Transpose @ metaEdges];
+	
+	groupedVertices = ConnectedComponents[metaGraphData];
+	
+	Table[
+		Flatten[
+			Cases[metaGraphData, # <-> _] &/@ groupedVertices[[i]]
+		],
+		{i,1,Length[groupedVertices]}
+	]
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ConnectedEdges*)
 
 
@@ -160,7 +172,7 @@ ManipulateMetaEdge[graph_, groupedVertices_] :=
 	]
 
 
-ManipulateMetaEdge[graphData_List, groupedVertices_] :=
+ManipulateMetaEdge[graphData_List, groupedVertices_, groupedEdges_] :=
 	Manipulate[
 		Graph[graphData, GraphHighlight -> groupedEdges[[i]]],
 		{i, 1, Length@groupedEdges, 1} 
@@ -171,13 +183,13 @@ ManipulateMetaEdge[graphData_List, groupedVertices_] :=
 (*DeleteEdge*)
 
 
-deleteEdge[completeGraph_, metaEdge_] := Block[
+DeleteEdge[completeGraph_, metaEdge_] := Block[
 	{newGraph, res, cond},
 	newGraph = Complement[completeGraph, metaEdge];
 	cond = ConnectedGraphQ[Graph @ newGraph];
-	Print[cond];
+	(*Print[cond];
 	Print["new graph: ", Length[newGraph]];
-	Print["complete graph: ", Length[completeGraph]];
+	Print["complete graph: ", Length[completeGraph]];*)
 	If[cond, 
 		res = newGraph,
 		res = completeGraph
