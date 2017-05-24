@@ -103,7 +103,7 @@ ExtractInfinitePart[vertices_,edges_, length_, color_] := Module[
 	{infPositions, infEdges},
 	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
 	infEdges = edges[[infPositions]];
-	Graphics3D[{color, GraphicsComplex[vertices, Line/@infEdges], Boxed -> False}]
+	Graphics3D[{color, GraphicsComplex[vertices, Line/@infEdges]}, Boxed -> False]
 ]
 
 
@@ -126,7 +126,7 @@ ExtractInfiniteEdges[vertices_, edges_, length_] := Module[
 
 VisualizeRootGraphics3D[vertices_, edges_, color_] := 
 	Graphics3D[
-		{color, GraphicsComplex[vertices, Line/@edges], Boxed -> False}]
+		{color, GraphicsComplex[vertices, Line/@edges]}, Boxed -> False]
 
 
 (* ::Subsection:: *)
@@ -151,7 +151,8 @@ InfinitePartManipulate[vertices_, edges_, length_] := Block[
 		Show[
 			Graphics3D[{
 				Thick, Red, 
-				GraphicsComplex[vertices, Line /@ infEdges[[1;;i+1]] ], Box -> False}
+				GraphicsComplex[vertices, Line /@ infEdges[[1;;i+1]] ]}, 
+				Box -> False
 			],
 			PlotRange -> boundingBox
 		],
@@ -165,15 +166,15 @@ InfinitePartManipulate[vertices_, edges_, length_] := Block[
 
 ShowIntersectionPointByIndex[graphics_,index_, vertices_, loopEdges_]:= Block[
 	{loopGraphVertices, id, vertex, midPt},
-	loopGraphVertices = Union @ Flatten[loopEdges]; (* No need to sort *)
+	loopGraphVertices = Sort @ Union @ Flatten[loopEdges]; (* No need to sort *)
 	id = loopGraphVertices[[index]];
 	vertex = vertices[[id]];
 	Show[graphics,
 		Graphics3D[{
 			Text[Style[id, Medium], vertex], 
 			PointSize[Large], Red, 
-			Point[vertex],
-			Box -> False}
+			Point[vertex]},
+			Boxed -> False
 		]
 	]
 ]
@@ -188,8 +189,8 @@ ShowIntersectionPointByIndex[graphics_,index_List, vertices_, loopEdges_]:= Bloc
 		Graphics3D[Flatten[{
 			MapThread[Text[Style[#1, Medium], #2]&, {id,vertex}], 
 			PointSize[Large], Red, 
-			Point[vertex],
-			Box -> False}]
+			Point[vertex]}],
+			Boxed -> False
 		]
 	]
 ]
