@@ -123,7 +123,7 @@ DisconnectGraph[graphData_, "MetagraphData"]:= Module[
 	g = Graph[graphData];
 	vertices = Sort @ VertexList[g];
 	vd = VertexDegree[g, #]&/@vertices;
-	vd3Position = Flatten @ Position[vd,3];
+	vd3Position = Flatten @ Position[vd, 3];
 	degree3Vtx = vertices[[vd3Position]];
 	
 	edges = GraphConvert[graphData];
@@ -176,7 +176,7 @@ ConnectedEdges[metaGraphData_List] := Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ManipulateMetaEdge*)
 
 
@@ -194,7 +194,7 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 	]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DeleteEdge*)
 
 
@@ -210,6 +210,38 @@ DeleteEdge[completeGraph_, metaEdge_] := Block[
 		res = completeGraph
 	];
 	res
+]
+
+
+(* ::Subsection:: *)
+(*Connect*)
+
+
+SelectVerticesWithDegree[edges_, degreeNumber_, "Edge Position"] := Module[
+	{graphData, g, graphVertices, vertexDegreeList, position},
+	graphData = MapThread[#1 <-> #2 &, Transpose @ edges];
+	g = Graph[graphData];
+	graphVertices = Sort @ VertexList[graphData];
+	vertexDegreeList = VertexDegree[g, #] &/@ graphVertices;
+	Flatten[Position[vertexDegreeList, degreeNumber]]
+]
+
+
+SelectVerticesWithDegree[edges_, degreeNumber_, "ID"] := Module[
+	{graphData, g, graphVertices, vertexDegreeList, position},
+	graphData = MapThread[#1 <-> #2 &, Transpose @ edges];
+	g = Graph[graphData];
+	graphVertices = Sort @ VertexList[graphData];
+	vertexDegreeList = VertexDegree[g, #] &/@ graphVertices;
+	position = Flatten[Position[vertexDegreeList, degreeNumber]];
+	graphVertices[[position]]
+]
+
+
+SelectVerticesWithDegree[vertices_, edges_, degreeNumber_, "Vertices"]:= Block[
+	{verticesID},
+	verticesID = SelectVerticesWithDegree[edges, degreeNumber, "ID"];
+	vertices [[verticesID]]
 ]
 
 
