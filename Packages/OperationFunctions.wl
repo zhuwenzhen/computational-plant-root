@@ -81,7 +81,7 @@ GraphConvert[list_List] := GraphConvert/@list
 FindVertexDegree3Position[graphData_List]:= Module[
 	{g, vertices, vertexDegree},
 	g = Graph[graphData];
-	vertices = VertexList[g];
+	vertices = Sort @ VertexList[g];
 	vertexDegree = VertexDegree[g, #]&/@ vertices;
 	Flatten @ Position[vertexDegree, 3]
 ]
@@ -93,7 +93,7 @@ FindVertexDegree3Position[graphData_List]:= Module[
 
 FindVertexDegree3[graphData_List] := Module[
 	{vertices, vd3Position},
-	vertices = VertexList[Graph[graphData]];
+	vertices = Sort @ VertexList[Graph[graphData]];
 	vd3Position = FindVertexDegree3Position[graphData];
 	vertices[[vd3Position]]
 ]
@@ -106,7 +106,7 @@ FindVertexDegree3[graphData_List] := Module[
 DisconnectGraph[graphData_, "Graph"]:= Module[
 	{g, vertices, vertexDegree, vd3Position, vd3Vertex},
 	g = Graph[graphData];
-	vertices = VertexList[g]; 
+	vertices = Sort @ VertexList[g]; 
 	vd3Position = FindVertexDegree3Position[graphData];
 	vd3Vertex = vertices[[vd3Position]];
 	VertexDelete[graphData,vd3Vertex]
@@ -121,7 +121,7 @@ DisconnectGraph[graphData_, "MetagraphData"]:= Module[
 	{g, vertices, degree3Vtx, vd, vd3Position, triEdgePosition, 
 	metaEdgesVertices, metaEdges, edges, metaGraphData, groupedVertices},
 	g = Graph[graphData];
-	vertices = VertexList[g];
+	vertices = Sort @ VertexList[g];
 	vd = VertexDegree[g, #]&/@vertices;
 	vd3Position = Flatten @ Position[vd,3];
 	degree3Vtx = vertices[[vd3Position]];
@@ -129,7 +129,6 @@ DisconnectGraph[graphData_, "MetagraphData"]:= Module[
 	edges = GraphConvert[graphData];
 	triEdgePosition = First @ Transpose[Flatten[Position[edges, #] &/@ degree3Vtx, 1]];
 	metaEdgesVertices = Delete[vertices, Position[vd,3]];
-	
 	
 	metaEdges = Delete[edges, {#} &/@ triEdgePosition];
 	metaGraphData = MapThread[#1 <-> #2 &, Transpose @ metaEdges]
@@ -150,15 +149,15 @@ DisconnectGraph[graphData_, "Data"]:= Module[
 ]
 
 
+(* ::Subsection:: *)
+(*DisconnectGraph - Return Vertices*)
+
+
 DisconnectGraph[graphData_, "Vertices"]:= Module[
 	{metaGraphData},
 	metaGraphData = DisconnectGraph[graphData, "MetagraphData"];
 	ConnectedComponents[metaGraphData]
 ]
-
-
-(* ::Subsection:: *)
-(*DisconnectGraph - Return Vertices*)
 
 
 (* ::Subsection::Closed:: *)
