@@ -160,7 +160,7 @@ DisconnectGraph[graphData_, "Vertices"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ConnectedEdges*)
 
 
@@ -176,7 +176,7 @@ ConnectedEdges[metaGraphData_List] := Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ManipulateMetaEdge*)
 
 
@@ -194,7 +194,7 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 	]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*DeleteEdge*)
 
 
@@ -215,6 +215,10 @@ DeleteEdge[completeGraph_, metaEdge_] := Block[
 
 (* ::Subsection:: *)
 (*Connect*)
+
+
+(* ::Subsubsection:: *)
+(*Select Vertices With Degree*)
 
 
 SelectVerticesWithDegree[edges_, degreeNumber_, "Edge Position"] := Module[
@@ -243,6 +247,24 @@ SelectVerticesWithDegree[vertices_, edges_, degreeNumber_, "Vertices"]:= Block[
 	verticesID = SelectVerticesWithDegree[edges, degreeNumber, "ID"];
 	vertices [[verticesID]]
 ]
+
+
+(* ::Subsubsection:: *)
+(*Select Disconnected Part*)
+
+
+SelectDisconnectedPart[edges_, "MetaEdge"] := Module[
+	{graphData, graph, graphVertices, vertexDegreeList, verticesSubset},
+	graphData = MapThread[#1 <-> #2 &, Transpose @ edges];
+	verticesSubset = SelectDisconnectedPart[edges, "ID"];
+	Flatten[ Cases[graphData, # <-> _] &/@ verticesSubset ]
+]
+
+SelectDisconnectedPart[edges_, "PairMetaEdge"] := Block[
+	{metaEdge},
+	metaEdge = SelectDisconnectedPart[edges, "MetaEdge"];
+	GraphConvert @ metaEdge
+]	
 
 
 (* ::Subsection:: *)
