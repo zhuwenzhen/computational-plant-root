@@ -267,6 +267,63 @@ SelectDisconnectedPart[edges_, "PairMetaEdge"] := Block[
 ]	
 
 
+(* ::Subsubsection:: *)
+(*SelectEndPoints*)
+
+
+SelectEndPoints[metaEdgePair_, "ID"] := 
+	SelectVerticesWithDegree[metaEdgePair, 1, "ID"]
+
+
+(* ::Subsubsection:: *)
+(*getMeasure*)
+
+
+getMeasure[id_]:= {thickness[[id]],width[[id]],length[[id]]}
+
+
+(* ::Subsubsection:: *)
+(*NextVertex*)
+
+
+nextVertex[id_, edges_]:= 
+	Select[Flatten[Select[edges, MemberQ[#, id]&]], # != id&]
+
+
+(* ::Subsubsection:: *)
+(*FindEdge *)
+
+
+findEdge[id_, edges_]:= Flatten[Select[edges, MemberQ[#, id]&]]
+
+findEdgeIndex[edge_, edges_]:= Select[edges, MemberQ[#, edge]&]
+
+
+(* ::Subsubsection:: *)
+(*Connect*)
+
+
+connect[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}] := Module[
+	{thickness1, thickness2, width1, width2, length1, length2, \[Epsilon], t, w, l, twoEdges, edgePositions,
+	newThickness = thickness, newWidth = width, newLength = length, newEdges = edges},
+	\[Epsilon] = 0.001;
+	
+	twoEdges = findEdge[#, edges] &/@ {id1, id2};
+	
+	edgePositions = Flatten[Position[edges, #] &/@ twoEdges];
+	{{thickness1, width1, length1}, {thickness2, width2, length2}} = getMeasure/@ edgePositions;
+	(*If[Abs[thickness-thickness2] < \[Epsilon] && Abs[width1 - width2] < \[Epsilon], $connect]*)
+	{t, w, l} = {Mean[{thickness1, thickness2}], Mean[{width1, width2}], Mean[{length1, length2}]};
+	Print[t, " ", w, " ", l];
+	AppendTo[newEdges, {id1, id2}];
+	AppendTo[newThickness, t];
+	AppendTo[newWidth, w];
+	AppendTo[newLength, l];
+	
+	{newEdges, {newThickness, newWidth, newLength}}
+]
+
+
 (* ::Subsection:: *)
 (*End*)
 
