@@ -328,7 +328,7 @@ connect[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}] := 
 
 DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Block[
 	{loopEdges, loopGraph, groupedVertices, groupedEdges, ids, 
-	duplicatedIds, duplicatedEdges, duplicatedVertices, 
+	duplicatedIds, duplicatedEdges, duplicatedVertices, edgeId,
 	newWidth, newThickness, newLength, newVertices, newEdges},
 	
 	loopEdges = ExtractInfiniteEdges[vertices, edges, length];
@@ -336,22 +336,23 @@ DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Bloc
 	groupedVertices = DisconnectGraph[loopGraph, "Vertices"];
 	groupedEdges = DisconnectGraph[loopGraph, "Data"];
 	ids = groupedVertices[[index]];
-	Print[ids];
+	(*Print[ids];*)
 	duplicatedIds = Range @ Length[ids] + Length[vertices];
-	Print[duplicatedIds];
+	(*Print[duplicatedIds];*)
 	duplicatedEdges = Partition[duplicatedIds, 2, 1];
-	Print[duplicatedEdges];
+	(*Print[duplicatedEdges];*)
+	
+	edgeId = Flatten[Position[edges, #]&/@ GraphConvert[groupedEdges[[index]] ] ];
+	(*Print[edgeId];*)
 	duplicatedVertices = vertices[[ids]];
-	Print[duplicatedVertices];
-	
-	newThickness = width[[ids]]/2;
-	newWidth = width[[ids]]/2;
-	newLength = length[[ids]]/2;
-	
+	(*Print[duplicatedVertices];*)
+	newThickness = width[[edgeId]]/2;
+	newWidth = width[[edgeId]]/2;
+	newLength = length[[edgeId]];
+	(*Print[newLength];*)
 	newWidth = Join[width, newWidth];
 	newThickness = Join[thickness, newThickness];
 	newLength = Join[length, newLength];
-	
 	newVertices = Join[vertices, duplicatedVertices];
 	newEdges = Join[edges, duplicatedEdges];
 	
