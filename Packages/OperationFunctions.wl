@@ -57,8 +57,8 @@ $UsageString[str__] :=
 	(StringTemplate[StringJoin[{str}]] /. {TemplateSlot[s_] :> $ArgString[s]})[]
 
 
-Graph3DLength::usage = $UsageString[
-	"Graph3DLength[`vertices, edges, length`] displays a three-dimensional graphics images of the roots."
+GraphConvert::usage = $UsageString[
+	"GraphConvert[`vertices, edges, length`] displays a three-dimensional graphics images of the roots."
 ];
 
 
@@ -304,23 +304,59 @@ findEdgeIndex[edge_, edges_]:= Select[edges, MemberQ[#, edge]&]
 
 
 connect[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}] := Module[
-	{thickness1, thickness2, width1, width2, length1, length2, \[Epsilon], t, w, l, twoEdges, edgePositions,
+	{thickness1, thickness2, width1, width2, length1, length2, \[Epsilon] = 0.001, t, w, l, twoEdges, edgePositions,
 	newThickness = thickness, newWidth = width, newLength = length, newEdges = edges},
-	\[Epsilon] = 0.001;
 	
 	twoEdges = findEdge[#, edges] &/@ {id1, id2};
-	
 	edgePositions = Flatten[Position[edges, #] &/@ twoEdges];
 	{{thickness1, width1, length1}, {thickness2, width2, length2}} = getMeasure/@ edgePositions;
 	(*If[Abs[thickness-thickness2] < \[Epsilon] && Abs[width1 - width2] < \[Epsilon], $connect]*)
 	{t, w, l} = {Mean[{thickness1, thickness2}], Mean[{width1, width2}], Mean[{length1, length2}]};
-	Print[t, " ", w, " ", l];
+	(*Print[t, " ", w, " ", l];*)
 	AppendTo[newEdges, {id1, id2}];
 	AppendTo[newThickness, t];
 	AppendTo[newWidth, w];
 	AppendTo[newLength, l];
 	
 	{newEdges, {newThickness, newWidth, newLength}}
+]
+
+
+(* ::Subsection:: *)
+(*Duplicate Edge*)
+
+
+DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Block[
+	{loopEdges, loopGraph, groupedVertices, groupedEdges, ids, 
+	duplicatedIds, duplicatedEdges, duplicatedVertices, 
+	newWidth, newThickness, newLength, newVertices, newEdges},
+	
+	loopEdges = ExtractInfiniteEdges[vertices, edges, length];
+	loopGraph = MapThread[#1 <-> #2 &, Transpose @ loopEdges];
+	groupedVertices = DisconnectGraph[loopGraph, "Vertices"];
+	groupedEdges = DisconnectGraph[loopGraph, "Data"];
+	ids = groupedVertices[[index]];
+	Print[ids];
+	duplicatedIds = Range @ Length[ids] + Length[vertices];
+	Print[duplicatedIds];
+	duplicatedEdges = Partition[duplicatedIds, 2, 1];
+	Print[duplicatedEdges];
+	duplicatedVertices = vertices[[ids]];
+	Print[duplicatedVertices];
+	
+	newThickness = width[[ids]]/2;
+	newWidth = width[[ids]]/2;
+	newLength = length[[ids]]/2;
+	
+	newWidth = Join[width, newWidth];
+	newThickness = Join[thickness, newThickness];
+	newLength = Join[length, newLength];
+	
+	newVertices = Join[vertices, duplicatedVertices];
+	newEdges = Join[edges, duplicatedEdges];
+	
+	{newVertices, newEdges, {newThickness, newWidth, newLength}}
+	
 ]
 
 
