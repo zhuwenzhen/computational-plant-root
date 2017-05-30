@@ -82,7 +82,7 @@ GraphConvert[a_ <-> b_] := {a, b}
 GraphConvert[list_List] := GraphConvert/@list
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*FindVertexDegree3Position*)
 
 
@@ -95,7 +95,7 @@ FindVertexDegree3Position[graphData_List]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*FindVertexDegree3*)
 
 
@@ -107,7 +107,7 @@ FindVertexDegree3[graphData_List] := Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*DisconnectGraph - Return graph*)
 
 
@@ -121,7 +121,7 @@ DisconnectGraph[graphData_, "Graph"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*DisconnectGraph - Return data*)
 
 
@@ -157,7 +157,7 @@ DisconnectGraph[graphData_, "Data"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*DisconnectGraph - Return Vertices*)
 
 
@@ -168,7 +168,7 @@ DisconnectGraph[graphData_, "Vertices"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ConnectedEdges*)
 
 
@@ -222,7 +222,7 @@ DeleteEdge[completeGraph_, metaEdge_] := Block[
 
 
 (* ::Subsection:: *)
-(*Connect*)
+(*ConnectEdge*)
 
 
 (* ::Subsubsection:: *)
@@ -261,6 +261,20 @@ SelectVerticesWithDegree[vertices_, edges_, degreeNumber_, "Vertices"]:= Block[
 (*Select Disconnected Part*)
 
 
+SelectDisconnectedPart[edges_, "Edge Position"] := Module[
+	{graphData, graph},
+	graphData = MapThread[#1 <-> #2 &, Transpose @ edges];
+	graph = Graph[graphData];
+	Last @ ConnectedComponents[graph] (* might need to change to "Select" the smaller part *)
+]
+SelectDisconnectedPart[edges_, "ID"] := Module[
+	{graphData, graph, graphVertices, vertexDegreeList, edgePositions} ,
+	graphData = MapThread[#1 <-> #2 &, Transpose @ edges];
+	graph = Graph[graphData];
+	graphVertices = Sort @ VertexList[graph];
+	edgePositions = Last @ ConnectedComponents[graph];
+	graphVertices[[edgePositions]]
+]
 SelectDisconnectedPart[edges_, "MetaEdge"] := Module[
 	{graphData, graph, graphVertices, vertexDegreeList, verticesSubset},
 	graphData = MapThread[#1 <-> #2 &, Transpose @ edges];
@@ -308,6 +322,39 @@ findEdgeIndex[edge_, edges_]:= Select[edges, MemberQ[#, edge]&]
 
 
 (* ::Subsubsection:: *)
+(*FindConnectionVerticesID*)
+
+
+FindConnectionVerticesID[partEdges_, vertices_, edges_] := Block[
+	{partEndPtsID, allEndPts, partEndPts, distList, distMin, minPosition,
+	minPts, minDistance, listPosition, minPtsID, id1, id2},
+	(* 1. Find end points from the isolated part *)
+	partEndPtsID = SelectEndPoints[partEdges, "ID"];
+	partEndPts=vertices[[partEndPtsID]];
+	(* 2. Find all end points from the whole root *)
+	allEndPts = SelectVerticesWithDegree[vertices, edges, 1, "Vertices"];
+	(*Print[allEndPts];*)
+	(* 3. Compute the minimal distance *)
+	distList=N@Outer[EuclideanDistance, partEndPts,allEndPts,1];
+	distMin = Last @ Transpose[TakeSmallest[#, 2] &/@ distList];
+	
+	(* pick the minimum from the two *)
+	{id1, minDistance} = Flatten @ MinimalBy[Transpose[{partEndPtsID, distMin}], Last];
+	listPosition = First @ First @ Position[distMin, minDistance];
+	(* 4. Find the min distance position *)
+	minPosition = Flatten[Position[distList[[listPosition]], minDistance]];
+	(* 5. Find the min distance points *)
+	minPts = allEndPts[[minPosition]];
+	Print[minPts];
+	
+	id2 = First@Flatten[Position[vertices,#]&/@minPts];
+	
+	{id1, id2}
+	
+]
+
+
+(* ::Subsubsection:: *)
 (*Connect*)
 
 
@@ -330,8 +377,8 @@ ConnectEdge[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}]
 ]
 
 
-(* ::Subsection:: *)
-(*Duplicate Edge*)
+(* ::Subsection::Closed:: *)
+(*DuplicateEdge*)
 
 
 (* ::Subsubsection:: *)
@@ -362,6 +409,10 @@ SortGraph[edges_, v_]:= Block[
 	];
 	visited
 ]
+
+
+(* ::Subsubsection:: *)
+(*DuplicateEdge*)
 
 
 DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Block[
