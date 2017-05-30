@@ -107,7 +107,7 @@ ExtractInfinitePart[vertices_,edges_, length_, color_] := Module[
 ]
 
 
-ExtractInfiniteEdges[vertices_, edges_, length_] := Module[
+ExtractInfiniteEdges[edges_, length_] := Module[
 	{infPositions, infEdges},
 	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
 	infEdges = edges[[infPositions]];
