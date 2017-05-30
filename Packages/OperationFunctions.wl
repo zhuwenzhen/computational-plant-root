@@ -368,25 +368,19 @@ DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Bloc
 	{loopEdges, loopGraph, groupedVertices, groupedEdges, ids, 
 	duplicatedIds, duplicatedEdges, duplicatedVertices, edgeId,
 	newWidth, newThickness, newLength, newVertices, newEdges, 
-	edgeVertex1, edgeVertex2, end1, end2, metaEdgeVertices, vtxA, vtxB},
+	edgeVertex1, edgeVertex2, end1, end2, metaEdgeVertices, vtxA, vtxB, duplicatedEdgesCopy},
 	
+	(* Set up *)
 	loopEdges = ExtractInfiniteEdges[edges, length];
-	
 	loopGraph = MapThread[#1 <-> #2 &, Transpose @ loopEdges];
-	
 	groupedVertices = DisconnectGraph[loopGraph, "Vertices"];
-	
 	groupedEdges = DisconnectGraph[loopGraph, "Data"];
 	
-	(*Print[duplicatedIds];*)
-	
-	(* ------------- Duplicate Edges ------------- *)
-	
-	
-	
+	(* Find the end points by picking vetex whose degree = 1 *)
 	{end1, end2} = SelectVerticesWithDegree[
-					groupedEdges[[index]]/.UndirectedEdge -> List, 1, "ID"];
-					
+						groupedEdges[[index]]/.UndirectedEdge -> List, 1, "ID"];
+	
+	(* find edge vertex & vtx A, B *)
 	metaEdgeVertices = groupedVertices[[index]]; 
 	edgeVertex1 = First @ Select[nextVertex[end1, edges], !MemberQ[metaEdgeVertices, #]&];
 	edgeVertex2 = First @ Select[nextVertex[end2, edges], !MemberQ[metaEdgeVertices, #]&];
@@ -394,58 +388,44 @@ DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Bloc
 	vtxA = First@Select[nextVertex[edgeVertex1, edges], # != end1&];
 	vtxB = First@Select[nextVertex[edgeVertex2, edges], # != end2&];
 	
-	
-	
-	(*Print["v1 = ", edgeVertex1, " v2 = ", edgeVertex2];*)				
-	(*edgeVertex1 = First @ Select[
-		nextVertex[duplicatedEdges\[LeftDoubleBracket]1,1\[RightDoubleBracket], edges], # \[NotEqual] duplicatedEdges\[LeftDoubleBracket]1,2\[RightDoubleBracket] &];
-	edgeVertex2 = First @ Select[
-		nextVertex[duplicatedEdges\[LeftDoubleBracket]2,2\[RightDoubleBracket], edges], # \[NotEqual] duplicatedEdges\[LeftDoubleBracket]2,1\[RightDoubleBracket] &];*)
-		
-		
 	duplicatedEdges = Partition[SortGraph[groupedEdges[[index]], end1], 2, 1];
+
 	duplicatedEdges = Join[{{edgeVertex1, duplicatedEdges[[1,1]]}},
 							duplicatedEdges,
-						   {{duplicatedEdges[[2,2]], edgeVertex2}}];	
-	Print[duplicatedEdges];
+						   {{Last@Last@duplicatedEdges, edgeVertex2}}];
 
-	edgeId = Flatten[Position[edges, #]&/@ duplicatedEdges];	
-	
+	duplicatedEdgesCopy = Join[duplicatedEdges, Reverse/@duplicatedEdges];
+				   
+						   
 	(* ------------- Duplicate Vertices ------------- *)
 	ids = Join[ {edgeVertex1}, SortGraph[groupedEdges[[index]], end1], {edgeVertex2}];
-	(*Print[ids];*)
 	(* duplicated vertex IDs *)
-	duplicatedIds = Range @ Length[ids] + Length[vertices];
-	Print[Length[duplicatedIds]];
-	newEdges = Partition[duplicatedIds, 2, 1];
-	Print[newEdges];
-	(*Print[edgeId];*)
+	duplicatedIds = Range @ Length[ids] + Length[vertices];	
 	duplicatedVertices = vertices[[ids]];
-	(*Print[duplicatedVertices];*)
+	newVertices = Join[vertices, duplicatedVertices];
 	
-	
-	
+	(* ------------- Duplicate and Update Edges ------------- *)
+	newEdges = Partition[duplicatedIds, 2, 1];
+	newEdges = Join[edges, newEdges];
+	newEdges = newEdges/.{
+				{edgeVertex1, vtxA}->{First@duplicatedIds, vtxA},
+				{vtxA, edgeVertex1}->{First@duplicatedIds, vtxA},
+				{edgeVertex2, vtxB}->{Last@duplicatedIds, vtxB},
+				{vtxB, edgeVertex2}->{Last@duplicatedIds, vtxB}
+			};   
+	(* now we have the whole edge we can use to duplicate *)
+	edgeId = Flatten[Position[edges, #]&/@ duplicatedEdgesCopy];
+	(* We need edge's id to assign the measurements values*)
 	
 	(* ------------- Duplicate Measurements ------------- *)
 	newThickness = thickness[[edgeId]]/2;
 	newWidth = width[[edgeId]]/2;
 	newLength = length[[edgeId]];
-	(*Print[newLength];*)
+	
 	newWidth = Join[width, newWidth];
 	newThickness = Join[thickness, newThickness];
 	newLength = Join[length, newLength];
-	newVertices = Join[vertices, duplicatedVertices];
-	newEdges = Join[edges, newEdges];
-	newEdges = newEdges/.{
-				{edgeVertex1, vtxA}->{First@duplicatedIds, edgeVertex1},
-				{vtxA, edgeVertex1}->{First@duplicatedIds, edgeVertex1},
-				{edgeVertex2, vtxB}->{Last@duplicatedIds, edgeVertex2},
-				{vtxB, edgeVertex2}->{Last@duplicatedIds, edgeVertex2}
-			};
-	Print[{edgeVertex1, vtxA}->{First@duplicatedIds, edgeVertex1},
-				{vtxA, edgeVertex1}->{First@duplicatedIds, edgeVertex1},
-				{edgeVertex2, vtxB}->{Last@duplicatedIds, edgeVertex2},
-				{vtxB, edgeVertex2}->{Last@duplicatedIds, edgeVertex2}];
+	
 	{newVertices, newEdges, {newThickness, newWidth, newLength}}
 	
 ]
