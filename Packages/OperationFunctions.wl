@@ -301,7 +301,7 @@ SelectEndPoints[metaEdgePair_, "ID"] :=
 (*getMeasure*)
 
 
-getMeasure[id_]:= {thickness[[id]],width[[id]],length[[id]]}
+getMeasure[id_, thickness_, width_, length_]:= {thickness[[id]],width[[id]],length[[id]]}
 
 
 (* ::Subsubsection:: *)
@@ -363,8 +363,10 @@ ConnectEdge[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}]
 	newThickness = thickness, newWidth = width, newLength = length, newEdges = edges},
 	
 	twoEdges = findEdge[#, edges] &/@ {id1, id2};
+	(*Print[twoEdges];*)
 	edgePositions = Flatten[Position[edges, #] &/@ twoEdges];
-	{{thickness1, width1, length1}, {thickness2, width2, length2}} = getMeasure/@ edgePositions;
+	(*Print[edgePositions];*)
+	{{thickness1, width1, length1}, {thickness2, width2, length2}} = getMeasure[#, thickness, width, length]&/@ edgePositions;
 	(*If[Abs[thickness-thickness2] < \[Epsilon] && Abs[width1 - width2] < \[Epsilon], $connect]*)
 	{t, w, l} = {Mean[{thickness1, thickness2}], Mean[{width1, width2}], Mean[{length1, length2}]};
 	(*Print[t, " ", w, " ", l];*)
@@ -377,7 +379,7 @@ ConnectEdge[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}]
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*DuplicateEdge*)
 
 
