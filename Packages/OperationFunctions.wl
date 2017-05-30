@@ -30,14 +30,22 @@ OperationFunctions`Private`$PublicSymbols = {
 	DisconnectGraph,
 	ConnectedEdges,
 	ManipulateMetaEdge,
-	DeleteEdge
+	DeleteEdge,
+	SelectVerticesWithDegree,
+	SelectDisconnectedPart,
+	SelectEndPoints,
+	getMeasure,
+	nextVertex,
+	findEdge,
+	findEdgeIndex,
+	ConnectEdge
 };
 
 
 Unprotect /@ OperationFunctions`Private`$PublicSymbols;
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Usage*)
 
 
@@ -66,7 +74,7 @@ GraphConvert::usage = $UsageString[
 (*Implementation*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*GraphConvert*)
 
 
@@ -74,7 +82,7 @@ GraphConvert[a_ <-> b_] := {a, b}
 GraphConvert[list_List] := GraphConvert/@list
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FindVertexDegree3Position*)
 
 
@@ -87,7 +95,7 @@ FindVertexDegree3Position[graphData_List]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FindVertexDegree3*)
 
 
@@ -99,7 +107,7 @@ FindVertexDegree3[graphData_List] := Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DisconnectGraph - Return graph*)
 
 
@@ -113,7 +121,7 @@ DisconnectGraph[graphData_, "Graph"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DisconnectGraph - Return data*)
 
 
@@ -149,7 +157,7 @@ DisconnectGraph[graphData_, "Data"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DisconnectGraph - Return Vertices*)
 
 
@@ -160,7 +168,7 @@ DisconnectGraph[graphData_, "Vertices"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ConnectedEdges*)
 
 
@@ -176,7 +184,7 @@ ConnectedEdges[metaGraphData_List] := Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ManipulateMetaEdge*)
 
 
@@ -194,7 +202,7 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 	]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DeleteEdge*)
 
 
@@ -303,7 +311,7 @@ findEdgeIndex[edge_, edges_]:= Select[edges, MemberQ[#, edge]&]
 (*Connect*)
 
 
-connect[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}] := Module[
+ConnectEdge[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}] := Module[
 	{thickness1, thickness2, width1, width2, length1, length2, \[Epsilon] = 0.001, t, w, l, twoEdges, edgePositions,
 	newThickness = thickness, newWidth = width, newLength = length, newEdges = edges},
 	
@@ -326,27 +334,100 @@ connect[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}] := 
 (*Duplicate Edge*)
 
 
+(* ::Subsubsection:: *)
+(*SortGraph*)
+
+
+SortGraph[graph_List, v_]:= Block[
+	{edges, nextV, visited = {v}},
+	edges = graph /. UndirectedEdge -> List;
+	nextV = First @ nextVertex[v, edges];
+	AppendTo[visited, nextV];
+	Do[
+		nextV = First@ Select[nextVertex[nextV, edges], !MemberQ[visited, #]&];
+		AppendTo[visited, nextV],
+		Length[graph] - 1
+	];
+	visited
+]
+
+SortGraph[edges_, v_]:= Block[
+	{ nextV, visited = {v}},
+	nextV = First @ nextVertex[v, edges];
+	AppendTo[visited, nextV];
+	Do[
+		nextV = First@ Select[nextVertex[nextV, edges],!MemberQ[visited,#]&];
+		AppendTo[visited, nextV],
+		Length[edges] - 1
+	];
+	visited
+]
+
+
 DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Block[
 	{loopEdges, loopGraph, groupedVertices, groupedEdges, ids, 
 	duplicatedIds, duplicatedEdges, duplicatedVertices, edgeId,
-	newWidth, newThickness, newLength, newVertices, newEdges},
+	newWidth, newThickness, newLength, newVertices, newEdges, 
+	edgeVertex1, edgeVertex2, end1, end2, metaEdgeVertices, vtxA, vtxB},
 	
-	loopEdges = ExtractInfiniteEdges[vertices, edges, length];
+	loopEdges = ExtractInfiniteEdges[edges, length];
+	
 	loopGraph = MapThread[#1 <-> #2 &, Transpose @ loopEdges];
-	groupedVertices = DisconnectGraph[loopGraph, "Vertices"];
-	groupedEdges = DisconnectGraph[loopGraph, "Data"];
-	ids = groupedVertices[[index]];
-	(*Print[ids];*)
-	duplicatedIds = Range @ Length[ids] + Length[vertices];
-	(*Print[duplicatedIds];*)
-	duplicatedEdges = Partition[duplicatedIds, 2, 1];
-	(*Print[duplicatedEdges];*)
 	
-	edgeId = Flatten[Position[edges, #]&/@ GraphConvert[groupedEdges[[index]] ] ];
+	groupedVertices = DisconnectGraph[loopGraph, "Vertices"];
+	
+	groupedEdges = DisconnectGraph[loopGraph, "Data"];
+	
+	(*Print[duplicatedIds];*)
+	
+	(* ------------- Duplicate Edges ------------- *)
+	
+	
+	
+	{end1, end2} = SelectVerticesWithDegree[
+					groupedEdges[[index]]/.UndirectedEdge -> List, 1, "ID"];
+					
+	metaEdgeVertices = groupedVertices[[index]]; 
+	edgeVertex1 = First @ Select[nextVertex[end1, edges], !MemberQ[metaEdgeVertices, #]&];
+	edgeVertex2 = First @ Select[nextVertex[end2, edges], !MemberQ[metaEdgeVertices, #]&];
+	
+	vtxA = First@Select[nextVertex[edgeVertex1, edges], # != end1&];
+	vtxB = First@Select[nextVertex[edgeVertex2, edges], # != end2&];
+	
+	
+	
+	(*Print["v1 = ", edgeVertex1, " v2 = ", edgeVertex2];*)				
+	(*edgeVertex1 = First @ Select[
+		nextVertex[duplicatedEdges\[LeftDoubleBracket]1,1\[RightDoubleBracket], edges], # \[NotEqual] duplicatedEdges\[LeftDoubleBracket]1,2\[RightDoubleBracket] &];
+	edgeVertex2 = First @ Select[
+		nextVertex[duplicatedEdges\[LeftDoubleBracket]2,2\[RightDoubleBracket], edges], # \[NotEqual] duplicatedEdges\[LeftDoubleBracket]2,1\[RightDoubleBracket] &];*)
+		
+		
+	duplicatedEdges = Partition[SortGraph[groupedEdges[[index]], end1], 2, 1];
+	duplicatedEdges = Join[{{edgeVertex1, duplicatedEdges[[1,1]]}},
+							duplicatedEdges,
+						   {{duplicatedEdges[[2,2]], edgeVertex2}}];	
+	Print[duplicatedEdges];
+
+	edgeId = Flatten[Position[edges, #]&/@ duplicatedEdges];	
+	
+	(* ------------- Duplicate Vertices ------------- *)
+	ids = Join[ {edgeVertex1}, SortGraph[groupedEdges[[index]], end1], {edgeVertex2}];
+	(*Print[ids];*)
+	(* duplicated vertex IDs *)
+	duplicatedIds = Range @ Length[ids] + Length[vertices];
+	Print[Length[duplicatedIds]];
+	newEdges = Partition[duplicatedIds, 2, 1];
+	Print[newEdges];
 	(*Print[edgeId];*)
 	duplicatedVertices = vertices[[ids]];
 	(*Print[duplicatedVertices];*)
-	newThickness = width[[edgeId]]/2;
+	
+	
+	
+	
+	(* ------------- Duplicate Measurements ------------- *)
+	newThickness = thickness[[edgeId]]/2;
 	newWidth = width[[edgeId]]/2;
 	newLength = length[[edgeId]];
 	(*Print[newLength];*)
@@ -354,8 +435,17 @@ DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Bloc
 	newThickness = Join[thickness, newThickness];
 	newLength = Join[length, newLength];
 	newVertices = Join[vertices, duplicatedVertices];
-	newEdges = Join[edges, duplicatedEdges];
-	
+	newEdges = Join[edges, newEdges];
+	newEdges = newEdges/.{
+				{edgeVertex1, vtxA}->{First@duplicatedIds, edgeVertex1},
+				{vtxA, edgeVertex1}->{First@duplicatedIds, edgeVertex1},
+				{edgeVertex2, vtxB}->{Last@duplicatedIds, edgeVertex2},
+				{vtxB, edgeVertex2}->{Last@duplicatedIds, edgeVertex2}
+			};
+	Print[{edgeVertex1, vtxA}->{First@duplicatedIds, edgeVertex1},
+				{vtxA, edgeVertex1}->{First@duplicatedIds, edgeVertex1},
+				{edgeVertex2, vtxB}->{Last@duplicatedIds, edgeVertex2},
+				{vtxB, edgeVertex2}->{Last@duplicatedIds, edgeVertex2}];
 	{newVertices, newEdges, {newThickness, newWidth, newLength}}
 	
 ]
