@@ -38,14 +38,17 @@ OperationFunctions`Private`$PublicSymbols = {
 	nextVertex,
 	findEdge,
 	findEdgeIndex,
-	ConnectEdge
+	ConnectEdge,
+	FindConnectionVerticesID,
+	SortGraph,
+	DuplicateEdge
 };
 
 
 Unprotect /@ OperationFunctions`Private`$PublicSymbols;
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Usage*)
 
 
@@ -66,7 +69,23 @@ $UsageString[str__] :=
 
 
 GraphConvert::usage = $UsageString[
-	"GraphConvert[`vertices, edges, length`] displays a three-dimensional graphics images of the roots."
+	"GraphConvert[`a\[UndirectedEdge]b`] convert graph back to list representation {a,b}."
+];
+
+
+FindVertexDegree3Position::usage = $UsageString[
+	"FindVertexDegree3Position[graphData_List] give the vertices' position in a graph where the vertice's degree = 3"
+];
+
+
+FindVertexDegree3::usage = $UsageString[
+	"FindVertexDegree3Position[graphData_List] give the vertices whose degree = 3"
+];
+
+
+DisconnectGraph::usage = $UsageString[
+	"DisconnectGraph[`graphData`, \"Graph\"] breaks graph into meta edges.",
+	"DisconnectGraph[`graphData`, \"MetagraphData\"] breaks graph into meta edges and return the broken graph's data."
 ];
 
 
@@ -74,7 +93,7 @@ GraphConvert::usage = $UsageString[
 (*Implementation*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*GraphConvert*)
 
 
@@ -184,7 +203,7 @@ ConnectedEdges[metaGraphData_List] := Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ManipulateMetaEdge*)
 
 
@@ -202,7 +221,7 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 	]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*DeleteEdge*)
 
 
@@ -417,14 +436,23 @@ SortGraph[edges_, v_]:= Block[
 (*DuplicateEdge*)
 
 
-DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Block[
+$extractInfiniteEdges[edges_, length_] := Module[
+	{infPositions, infEdges},
+	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
+	infEdges = edges[[infPositions]];
+	infEdges
+]
+
+
+DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Module[
 	{loopEdges, loopGraph, groupedVertices, groupedEdges, ids, 
 	duplicatedIds, duplicatedEdges, duplicatedVertices, edgeId,
 	newWidth, newThickness, newLength, newVertices, newEdges, 
-	edgeVertex1, edgeVertex2, end1, end2, metaEdgeVertices, vtxA, vtxB, duplicatedEdgesCopy},
+	edgeVertex1, edgeVertex2, end1, end2, metaEdgeVertices, vtxA, vtxB, 
+	duplicatedEdgesCopy},
 	
 	(* Set up *)
-	loopEdges = ExtractInfiniteEdges[edges, length];
+	loopEdges = $extractInfiniteEdges[edges, length];
 	loopGraph = MapThread[#1 <-> #2 &, Transpose @ loopEdges];
 	groupedVertices = DisconnectGraph[loopGraph, "Vertices"];
 	groupedEdges = DisconnectGraph[loopGraph, "Data"];
@@ -480,7 +508,6 @@ DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Bloc
 	newLength = Join[length, newLength];
 	
 	{newVertices, newEdges, {newThickness, newWidth, newLength}}
-	
 ]
 
 
