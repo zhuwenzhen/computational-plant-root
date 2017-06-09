@@ -34,7 +34,8 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	ExtractInfiniteEdges, 
 	RescalingParameter,
 	ShowIntersectionPointByIndex,
-	VisualizeRootGraphics3D
+	VisualizeRootGraphics3D,
+	ColorMetaEdges3D
 };
 
 
@@ -193,6 +194,25 @@ ShowIntersectionPointByIndex[graphics_,index_List, vertices_, loopEdges_]:= Bloc
 			Boxed -> False
 		]
 	]
+]
+
+
+(* ::Subsection:: *)
+(*ColorMetaEdge3D*)
+
+
+$rainbow[n_]:=ColorData["Rainbow"]/@Subdivide[n-1]
+
+ColorMetaEdges3D[vertices_, groupedEdges_]:= Module[
+	{len, edgeNum, c, colors, organized, metaEdgeColors},
+	len = Length[groupedEdges];
+	c = rainbow[len];
+	Print[c];
+	edgeNum = Length/@groupedEdges ;
+	colors = Table[Table[ c[[i]], {edgeNum[[i]]}], {i, 1, len}];
+	organized = Transpose /@ (Transpose@{colors, groupedEdges/.UndirectedEdge -> List});
+	metaEdgeColors = {#[[1]], Thick, Line[#[[2]]]} &/@ Flatten[organized, 1];
+	Graphics3D[GraphicsComplex[vertices,metaEdgeColors], Boxed -> False]
 ]
 
 
