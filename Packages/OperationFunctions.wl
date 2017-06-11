@@ -25,6 +25,7 @@ BeginPackage["OperationFunctions`"];
 
 OperationFunctions`Private`$PublicSymbols = {
 	GraphConvert,
+	ConvertListToEdge,
 	FindVertexDegree3,
 	FindVertexDegree3Position,
 	DisconnectGraph,
@@ -99,6 +100,9 @@ DisconnectGraph::usage = $UsageString[
 
 GraphConvert[a_ <-> b_] := {a, b}
 GraphConvert[list_List] := GraphConvert/@list
+
+ConvertListToEdge[{a_,b_}]:= a <-> b;
+ConvertListToEdge[list_List]:=ConvertListToEdge/@list
 
 
 (* ::Subsection:: *)
@@ -225,10 +229,10 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 (*DeleteEdge*)
 
 
-DeleteEdge[completeGraph_, metaEdge_] := Block[
+(*DeleteEdge[completeGraph_, metaEdge_] := Block[
 	{newGraph, res, cond},
 	newGraph = Complement[completeGraph, metaEdge];
-	cond = ConnectedGraphQ[Graph @ newGraph];
+	(*cond = ConnectedGraphQ[Graph @ newGraph];*)
 	(*Print[cond];
 	Print["new graph: ", Length[newGraph]];
 	Print["complete graph: ", Length[completeGraph]];*)
@@ -236,7 +240,25 @@ DeleteEdge[completeGraph_, metaEdge_] := Block[
 		res = newGraph,
 		res = completeGraph
 	];
-	res
+	res = completeGraph	
+]*)
+
+(*DeleteEdge[completeGraph_, metaEdge_] := Complement[completeGraph, metaEdge]*)
+
+
+(* ::Text:: *)
+(*When delete Edge, the corresponding measurements should also be deleted.*)
+
+
+DeleteEdge[edges_, metaEdge_, {thickness_, width_, length_}] := Block[
+	{deletePosition, newEdges, newThickness, newWidth, newLength},
+	(*newEdges = Complement[edges, metaEdge];*)
+	deletePosition = Flatten[Position[edges, #]&/@ metaEdge, 1];
+	newEdges = Delete[edges, deletePosition];
+	newThickness = Delete[thickness, deletePosition];
+	newWidth = Delete[width, deletePosition];
+	newLength = Delete[length, deletePosition];
+	{GraphConvert[newEdges],{newThickness, newWidth, newLength}}
 ]
 
 
