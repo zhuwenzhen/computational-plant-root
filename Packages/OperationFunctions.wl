@@ -42,7 +42,8 @@ OperationFunctions`Private`$PublicSymbols = {
 	ConnectEdge,
 	FindConnectionVerticesID,
 	SortGraph,
-	DuplicateEdge
+	DuplicateEdge,
+	duplicate
 };
 
 
