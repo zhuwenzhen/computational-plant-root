@@ -533,6 +533,61 @@ DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Modu
 ]
 
 
+(* ::Subsubsection:: *)
+(*Duplicate*)
+
+
+(* ::Text:: *)
+(*e: {Subscript[v, 1], ..., Subscript[v, n]}, assume it's already sorted / sort it again anyway*)
+
+
+duplicate[e1_, e2_, e3_, e4_, e_, vertices_, edges_, {thickness_, width_, length_}]:= Block[
+	{
+		v1, v2, v3, v4, vA, vB,
+		vtxDupID, vtxDup, newVtxID, edgeID, edgeDupCopy,
+		edgeDup, newVtx, newEdges, newThickness, newWidth, newLength
+		
+	},
+	(*---------- ----------*)
+	
+	vA =First @ Intersection[e1, e2];
+	vB = First@Intersection[e3, e4];
+	v1 = First@ Complement[e1, {vA}];
+	v2 = First@ Complement[e2, {vB}];
+	
+	(*---------- Find Vertices needs to be duplicated ----------*)
+	vtxDupID = Union @ Flatten[e];
+	vtxDup = vertices[[vtxDupID]];
+	
+	newVtx = Join[vertices, vtxDup];
+	
+	(*---------- Construct new edges ----------*)
+	newVtxID = Range[Length[edges]] + Length[vertices]; (*if e doesn't including endpoints, +2 *)
+	newEdges = Partition[newVtxID, 2, 1];
+	edgeDup = Partition[SortGraph[e, vA], 2, 1];
+	edgeDupCopy = Join[edgeDup, Reverse/@ edgeDup];
+	newEdges = Join[edges, edgeDup];
+	
+	newEdges = newEdges/. {{v2,vA}->{First@vtxDupID, vA},
+						   {vA,v2}->{First@vtxDupID, vA},
+						   {v2,vB}->{Last@vtxDupID,vB},
+						   {vB,v2}->{Last@vtxDupID,vB} };
+	
+	edgeID = Flatten[Position[edges, #]&/@ edgeDupCopy];
+	
+	newThickness = thickness[[edgeID]]/2;
+	newWidth = width[[edgeID]]/2;
+	newLength = length[[edgeID]];
+	
+	newWidth = Join[width, newWidth];
+	newThickness = Join[thickness, newThickness];
+	newLength = Join[length, newLength];
+	
+	{newVtx, newEdges, {newThickness, newWidth, newLength}}
+	
+]
+
+
 (* ::Subsection:: *)
 (*End*)
 
