@@ -30,12 +30,15 @@ BeginPackage["VisualizationFunctions`"];
 
 VisualizationFunctions`Private`$PublicSymbols = {
 	Graph3DLength, 
+	VisualizeRootGraphics3D,
 	ExtractInfinitePart, 
 	ExtractInfiniteEdges, 
 	RescalingParameter,
-	ShowIntersectionPointByIndex,
-	VisualizeRootGraphics3D,
-	ColorMetaEdges3D
+	(*ShowIntersectionPointByIndex,*)
+	ShowIntersectionPointByVertexPosition,
+	ShowVerticesID,
+	ColorMetaEdges3D,
+	Rainbow
 };
 
 
@@ -116,11 +119,6 @@ ExtractInfiniteEdges[edges_, length_] := Module[
 ]
 
 
-(*ComputeBoundingBox[vertices_, infEdges_, offset_] := Block[
-	
-]*)
-
-
 (* ::Subsection:: *)
 (*VisualizeRootGraphics3D*)
 
@@ -131,44 +129,44 @@ VisualizeRootGraphics3D[vertices_, edges_, color_] :=
 
 
 (* ::Subsection:: *)
-(*InfinitePartManipulate*)
+(*ShowVerticesID*)
 
 
-RescalingParameter[{{xmin_,xmax_}, {ymin_,ymax_}, {zmin_,zmax_}}] := 
-	{{xmin - 10, xmax + 10}, {ymin - 10, ymax + 10}, {zmin - 10, zmax + 10}}
-RescalingParameter[{{xmin_,xmax_}, {ymin_,ymax_}, {zmin_,zmax_}}, offset_] := 
-	{{xmin - offset, xmax + offset}, {ymin - offset, ymax + offset}, {zmin - offset, zmax + offset}}
+ShowVerticesID[graphics_,id_, vertices_, edges_]:= Block[
+	{vertex},
+	vertex = vertices[[id]];
+	Show[graphics, 
+		Graphics3D[{
+			Text[Style[id, Medium], vertex], 
+			PointSize[Large], Red, 
+			Point[vertex]},
+			Boxed -> False
+		]
+	]	
+]
 
-
-InfinitePartManipulate[vertices_, edges_, length_] := Block[
-	{infPositions, infEdges, verticesSubset, minMaxOfVertices, boundingBox},
-	
-	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
-	infEdges = edges[[infPositions]];
-	verticesSubset = vertices[[ Union[Flatten[infEdges]] ]];
-	minMaxOfVertices = MinMax /@ Transpose[verticesSubset];
-	boundingBox = RescalingParameter[minMaxOfVertices];
-	Manipulate[
-		Show[
-			Graphics3D[{
-				Thick, Red, 
-				GraphicsComplex[vertices, Line /@ infEdges[[1;;i+1]] ]}, 
-				Box -> False
-			],
-			PlotRange -> boundingBox
-		],
-	{i,1,Length[infEdges]-1,1}]
+ShowVerticesID[graphics_,id_List, vertices_, edges_]:= Block[
+	{vertex},
+	vertex = vertices[[#]]&/@id;
+	Show[graphics, 
+		Graphics3D[Flatten[{
+			MapThread[Text[Style[#1, Medium], #2]&, {id,vertex}], 
+			PointSize[Large], Red, 
+			Point[vertex]}],
+			Boxed -> False
+		]
+	]	
 ]
 
 
 (* ::Subsection:: *)
-(*ShowIntersectionPointByIndex*)
+(*ShowIntersectionPointByVertexPosition*)
 
 
-ShowIntersectionPointByIndex[graphics_,index_, vertices_, loopEdges_]:= Block[
-	{loopGraphVertices, id, vertex, midPt},
-	loopGraphVertices = Sort @ Union @ Flatten[loopEdges]; (* No need to sort *)
-	id = loopGraphVertices[[index]];
+ShowIntersectionPointByVertexPosition[graphics_,index_, vertices_, edges_]:= Block[
+	{graphVtx, id, vertex},
+	graphVtx = Sort @ Union @ Flatten[edges]; (* No need to sort *)
+	id = graphVtx[[index]];
 	vertex = vertices[[id]];
 	Show[graphics,
 		Graphics3D[{
@@ -181,7 +179,7 @@ ShowIntersectionPointByIndex[graphics_,index_, vertices_, loopEdges_]:= Block[
 ]
 
 
-ShowIntersectionPointByIndex[graphics_,index_List, vertices_, loopEdges_]:= Block[
+ShowIntersectionPointByVertexPosition[graphics_,index_List, vertices_, loopEdges_]:= Block[
 	{loopGraphVertices, id, vertex, midPt},
 	loopGraphVertices = Union @ Flatten[loopEdges]; (* No need to sort *)
 	id = loopGraphVertices[[#]]&/@index;
@@ -201,12 +199,12 @@ ShowIntersectionPointByIndex[graphics_,index_List, vertices_, loopEdges_]:= Bloc
 (*ColorMetaEdge3D*)
 
 
-$rainbow[n_]:=ColorData["Rainbow"]/@Subdivide[n-1]
+Rainbow[n_]:=ColorData["Rainbow"]/@Subdivide[n-1]
 
 ColorMetaEdges3D[vertices_, groupedEdges_]:= Module[
 	{len, edgeNum, c, colors, organized, metaEdgeColors},
 	len = Length[groupedEdges];
-	c = rainbow[len];
+	c = Rainbow[len];
 	Print[c];
 	edgeNum = Length/@groupedEdges ;
 	colors = Table[Table[ c[[i]], {edgeNum[[i]]}], {i, 1, len}];

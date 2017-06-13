@@ -24,10 +24,11 @@ BeginPackage["OperationFunctions`"];
 
 
 OperationFunctions`Private`$PublicSymbols = {
-	GraphConvert,
+	ConvertEdgeToList,
 	ConvertListToEdge,
-	FindVertexDegree3,
-	FindVertexDegree3Position,
+	FindVertexDegree,
+	FindVertexDegreePosition,
+	FindVertexDegreeN,
 	DisconnectGraph,
 	ConnectedEdges,
 	ManipulateMetaEdge,
@@ -42,8 +43,8 @@ OperationFunctions`Private`$PublicSymbols = {
 	ConnectEdge,
 	FindConnectionVerticesID,
 	SortGraph,
-	DuplicateEdge, (*need to switch name with the more general one *)
-	duplicate,
+	DuplicateEdgeWithIndex, (*need to switch name with the more general one *)
+	DuplicateEdge,
 	ExtractEdge
 };
 
@@ -76,13 +77,13 @@ GraphConvert::usage = $UsageString[
 ];
 
 
-FindVertexDegree3Position::usage = $UsageString[
+FindVertexDegreePosition::usage = $UsageString[
 	"FindVertexDegree3Position[graphData_List] give the vertices' position in a graph where the vertice's degree = 3"
 ];
 
 
-FindVertexDegree3::usage = $UsageString[
-	"FindVertexDegree3Position[graphData_List] give the vertices whose degree = 3"
+FindVertexDegreeN::usage = $UsageString[
+	"FindVertexDegreeN[graphData_List, n_] give the vertices whose degree = n."
 ];
 
 
@@ -100,34 +101,34 @@ DisconnectGraph::usage = $UsageString[
 (*GraphConvert*)
 
 
-GraphConvert[a_ <-> b_] := {a, b}
-GraphConvert[list_List] := GraphConvert/@list
+ConvertEdgeToList[a_ <-> b_] := {a, b}
+ConvertEdgeToList[list_List] := ConvertEdgeToList/@list
 
-ConvertListToEdge[{a_,b_}]:= a <-> b;
-ConvertListToEdge[list_List]:=ConvertListToEdge/@list
+ConvertListToEdge[{a_, b_}]:= a <-> b;
+ConvertListToEdge[list_List]:= ConvertListToEdge/@list
 
 
 (* ::Subsection:: *)
-(*FindVertexDegree3Position*)
+(*FindVertexDegreePosition*)
 
 
-FindVertexDegree3Position[graphData_List]:= Module[
+FindVertexDegreePosition[graphData_List, n_]:= Module[
 	{g, vertices, vertexDegree},
 	g = Graph[graphData];
 	vertices = Sort @ VertexList[g];
 	vertexDegree = VertexDegree[g, #]&/@ vertices;
-	Flatten @ Position[vertexDegree, 3]
+	Flatten @ Position[vertexDegree, n]
 ]
 
 
 (* ::Subsection:: *)
-(*FindVertexDegree3*)
+(*FindVertexDegreeN*)
 
 
-FindVertexDegree3[graphData_List] := Module[
+FindVertexDegreeN[graphData_List, n_] := Module[
 	{vertices, vd3Position},
 	vertices = Sort @ VertexList[Graph[graphData]];
-	vd3Position = FindVertexDegree3Position[graphData];
+	vd3Position = FindVertexDegreePosition[graphData, n];
 	vertices[[vd3Position]]
 ]
 
@@ -140,7 +141,7 @@ DisconnectGraph[graphData_, "Graph"]:= Module[
 	{g, vertices, vertexDegree, vd3Position, vd3Vertex},
 	g = Graph[graphData];
 	vertices = Sort @ VertexList[g]; 
-	vd3Position = FindVertexDegree3Position[graphData];
+	vd3Position = FindVertexDegreePosition[graphData, 3];
 	vd3Vertex = vertices[[vd3Position]];
 	VertexDelete[graphData,vd3Vertex]
 ]
@@ -159,9 +160,9 @@ DisconnectGraph[graphData_, "MetagraphData"]:= Module[
 	vd3Position = Flatten @ Position[vd, 3];
 	degree3Vtx = vertices[[vd3Position]];
 	
-	edges = GraphConvert[graphData];
+	edges = ConvertEdgeToList[graphData];
 	triEdgePosition = First @ Transpose[Flatten[Position[edges, #] &/@ degree3Vtx, 1]];
-	metaEdgesVertices = Delete[vertices, Position[vd,3]];
+	metaEdgesVertices = Delete[vertices, Position[vd, 3]];
 	
 	metaEdges = Delete[edges, {#} &/@ triEdgePosition];
 	metaGraphData = MapThread[#1 <-> #2 &, Transpose @ metaEdges]
@@ -231,27 +232,6 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 (*DeleteEdge*)
 
 
-(*DeleteEdge[completeGraph_, metaEdge_] := Block[
-	{newGraph, res, cond},
-	newGraph = Complement[completeGraph, metaEdge];
-	(*cond = ConnectedGraphQ[Graph @ newGraph];*)
-	(*Print[cond];
-	Print["new graph: ", Length[newGraph]];
-	Print["complete graph: ", Length[completeGraph]];*)
-	If[cond, 
-		res = newGraph,
-		res = completeGraph
-	];
-	res = completeGraph	
-]*)
-
-(*DeleteEdge[completeGraph_, metaEdge_] := Complement[completeGraph, metaEdge]*)
-
-
-(* ::Text:: *)
-(*When delete Edge, the corresponding measurements should also be deleted.*)
-
-
 DeleteEdge[edges_, metaEdge_, {thickness_, width_, length_}] := Block[
 	{deletePosition, newEdges, newThickness, newWidth, newLength},
 	(*newEdges = Complement[edges, metaEdge];*)
@@ -260,7 +240,7 @@ DeleteEdge[edges_, metaEdge_, {thickness_, width_, length_}] := Block[
 	newThickness = Delete[thickness, deletePosition];
 	newWidth = Delete[width, deletePosition];
 	newLength = Delete[length, deletePosition];
-	{GraphConvert[newEdges],{newThickness, newWidth, newLength}}
+	{newEdges,{newThickness, newWidth, newLength}}
 ]
 
 
@@ -269,7 +249,7 @@ DeleteEdge[edges_, metaEdge_, {thickness_, width_, length_}] := Block[
 
 
 (* ::Subsubsection:: *)
-(*Select Vertices With Degree*)
+(*Select Vertices With Degree == n*)
 
 
 SelectVerticesWithDegree[edges_, degreeNumber_, "Edge Position"] := Module[
@@ -328,7 +308,7 @@ SelectDisconnectedPart[edges_, "MetaEdge"] := Module[
 SelectDisconnectedPart[edges_, "PairMetaEdge"] := Block[
 	{metaEdge},
 	metaEdge = SelectDisconnectedPart[edges, "MetaEdge"];
-	GraphConvert @ metaEdge
+	ConvertEdgeToList @ metaEdge
 ]	
 
 
@@ -360,7 +340,6 @@ nextVertex[id_, edges_]:=
 
 
 findEdge[id_, edges_]:= Flatten[Select[edges, MemberQ[#, id]&]]
-
 findEdgeIndex[edge_, edges_]:= Select[edges, MemberQ[#, edge]&]
 
 
@@ -388,8 +367,7 @@ FindConnectionVerticesID[partEdges_, vertices_, edges_] := Block[
 	minPosition = Flatten[Position[distList[[listPosition]], minDistance]];
 	(* 5. Find the min distance points *)
 	minPts = allEndPts[[minPosition]];
-	Print[minPts];
-	
+
 	id2 = First@Flatten[Position[vertices,#]&/@minPts];
 	
 	{id1, id2}
@@ -406,13 +384,13 @@ ConnectEdge[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}]
 	newThickness = thickness, newWidth = width, newLength = length, newEdges = edges},
 	
 	twoEdges = findEdge[#, edges] &/@ {id1, id2};
-	(*Print[twoEdges];*)
+	
 	edgePositions = Flatten[Position[edges, #] &/@ twoEdges];
-	(*Print[edgePositions];*)
+	
 	{{thickness1, width1, length1}, {thickness2, width2, length2}} = getMeasure[#, thickness, width, length]&/@ edgePositions;
-	(*If[Abs[thickness-thickness2] < \[Epsilon] && Abs[width1 - width2] < \[Epsilon], $connect]*)
+	
 	{t, w, l} = {Mean[{thickness1, thickness2}], Mean[{width1, width2}], Mean[{length1, length2}]};
-	(*Print[t, " ", w, " ", l];*)
+	
 	AppendTo[newEdges, {id1, id2}];
 	AppendTo[newThickness, t];
 	AppendTo[newWidth, w];
@@ -442,7 +420,6 @@ SortGraph[graph_List, v_]:= Block[
 	];
 	visited
 ]
-
 SortGraph[edges_, v_]:= Block[
 	{ nextV, visited = {v}},
 	nextV = First @ nextVertex[v, edges];
@@ -468,7 +445,7 @@ $extractInfiniteEdges[edges_, length_] := Module[
 ]
 
 
-DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Module[
+DuplicateEdgeWithIndex[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Module[
 	{loopEdges, loopGraph, groupedVertices, groupedEdges, ids, 
 	duplicatedIds, duplicatedEdges, duplicatedVertices, edgeId,
 	newWidth, newThickness, newLength, newVertices, newEdges, 
@@ -541,24 +518,24 @@ DuplicateEdge[index_, {vertices_, edges_, {thickness_, width_, length_}}]:= Modu
 
 (* ::Text:: *)
 (*e: {Subscript[v, 1], ..., Subscript[v, n]}, assume it's already sorted / sort it again anyway*)
+(*dup: is abbr. for duplication*)
 
 
-duplicate[e1_, e2_, e3_, e4_, e_, vertices_, edges_, {thickness_, width_, length_}]:= Block[
+DuplicateEdge[e1_, e2_, e3_, e4_, e_, vertices_, edges_, {thickness_, width_, length_}]:= Block[
 	{
 		v1, v2, v3, v4, vA, vB,
-		vtxDupID, vtxDup, newVtxID, edgeID, edgeDupCopy,
-		edgeDup, newVtx, newEdges, newThickness, newWidth, newLength	
+		vtxDupID, vtxDup, newVtxID, edgeID, edgeDup, edgeDupCopy,
+		newVtx,newEdges, newThickness, newWidth, newLength	
 	},
 	(*---------- ----------*)
 	
 	vA = First @ Intersection[e1, e2];
 	vB = First @ Intersection[e3, e4];
 	
-	
 	v1 = First @ Complement[e1, {vA}];
 	v2 = First @ Complement[e2, {vA}];
-	v3=First@Complement[e3,{vB}];
-	v4=First@Complement[e4,{vB}];
+	v3 = First @ Complement[e3, {vB}];
+	v4 = First @ Complement[e4, {vB}];
 	
 	(*---------- Find Vertices needs to be duplicated ----------*)
 	vtxDupID = Union @ Flatten[e];
@@ -571,8 +548,7 @@ duplicate[e1_, e2_, e3_, e4_, e_, vertices_, edges_, {thickness_, width_, length
 	edgeDup = Partition[SortGraph[e, vA], 2, 1];
 	edgeDupCopy = Join[edgeDup, Reverse/@ edgeDup];
 	newEdges = Join[edges, newEdges];
-	Print[newEdges];
-	Print[{First@newVtxID, v2}];
+
 	newEdges = newEdges/. {{v2,vA}->{First@newVtxID, v2},
 						   {vA,v2}->{First@newVtxID, v2},
 						   {v4,vB}->{Last@newVtxID, v4},
