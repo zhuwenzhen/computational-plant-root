@@ -135,10 +135,11 @@ VisualizeRootGraphics3D[vertices_, edges_, color_] :=
 ShowVerticesID[graphics_,id_, vertices_, edges_]:= Block[
 	{vertex},
 	vertex = vertices[[id]];
+
 	Show[graphics, 
 		Graphics3D[{
 			Text[Style[id, Medium], vertex], 
-			PointSize[Large], Red, 
+			PointSize[Medium], Red, 
 			Point[vertex]},
 			Boxed -> False
 		]
@@ -151,7 +152,7 @@ ShowVerticesID[graphics_,id_List, vertices_, edges_]:= Block[
 	Show[graphics, 
 		Graphics3D[Flatten[{
 			MapThread[Text[Style[#1, Medium], #2]&, {id,vertex}], 
-			PointSize[Large], Red, 
+			PointSize[Medium], Red, 
 			Point[vertex]}],
 			Boxed -> False
 		]
@@ -210,7 +211,7 @@ ColorMetaEdges3D[vertices_, groupedEdges_]:= Module[
 	colors = Table[Table[ c[[i]], {edgeNum[[i]]}], {i, 1, len}];
 	organized = Transpose /@ (Transpose@{colors, groupedEdges/.UndirectedEdge -> List});
 	metaEdgeColors = {#[[1]], Thick, Line[#[[2]]]} &/@ Flatten[organized, 1];
-	Graphics3D[GraphicsComplex[vertices,metaEdgeColors], Boxed -> False]
+	Graphics3D[GraphicsComplex[vertices, metaEdgeColors], Boxed -> False]
 ]
 
 
