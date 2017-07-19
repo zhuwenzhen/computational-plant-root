@@ -132,11 +132,12 @@ GenerateRoot[wharlNode_, stemLength_, {seminalLength_, numSeminal_}, {lateralLen
 
 RootGraph[graphData_]:= Graph[
 	graphData, 
-	VertexLabels->"Name", 
-	ImagePadding->10, 
-	GraphLayout->{"LayeredDigraphEmbedding",
-				 "Orientation"->Top,
-				 "RootVertex"->1}]
+	VertexLabels -> "Name", 
+	ImagePadding -> 10, 
+	GraphLayout -> {"LayeredDigraphEmbedding",
+				  "Orientation" -> Top,
+				  "RootVertex" -> 1}
+]
 
 
 (* ::Subsection:: *)

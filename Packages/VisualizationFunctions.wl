@@ -127,6 +127,14 @@ VisualizeRootGraphics3D[vertices_, edges_, color_] :=
 	Graphics3D[
 		{color, GraphicsComplex[vertices, Line/@edges]}, Boxed -> False]
 
+VisualizeRootGraphics3D[vertices_, edges_, width_]:= Module[
+	{w, colors, edgeColors},
+	w = Rescale[width];
+	colors = ColorData["Rainbow"]/@ w ;
+	edgeColors = Transpose[{colors, Line/@edges}];
+	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
+]
+
 
 (* ::Subsection:: *)
 (*ShowVerticesID*)
