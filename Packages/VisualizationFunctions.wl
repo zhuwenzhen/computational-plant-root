@@ -32,7 +32,9 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	Graph3DLength, 
 	VisualizeRootGraphics3D,
 	ExtractInfinitePart, 
-	ExtractInfiniteEdges, 
+	ExtractInfiniteEdges,
+	ExtractLargeWidthPart,
+	ExtractLargeWidthEdges, 
 	RescalingParameter,
 	(*ShowIntersectionPointByIndex,*)
 	ShowIntersectionPointByVertexPosition,
@@ -70,13 +72,37 @@ Graph3DLength::usage = $UsageString[
 ];
 
 
+VisualizeRootGraphics3D::usage = $UsageString[
+	"VisualizeRootGraphics3D[`vertices, edges, color`] represents a three-dimentional graphical image of root."
+];
+
+VisualizeRootGraphics3D::usage = $UsageString[
+	"VisualizeRootGraphics3D[`vertices, edges, width`] represents a three-dimentional graphical image of root and is colored by width measurement."
+];
+
+
 ExtractInfinitePart::usage = $UsageString[
-	"ExtractInfinitePart[`vertices, edges, length, color`] displays only the part of roots whose edges have infinite length."
+	"ExtractInfinitePart[`vertices, edges, length, color`] displays only the part of root where edges have infinite length."
 ];
 
 
 ExtractInfiniteEdges::usage = $UsageString[
-	"ExtractInfiniteEdges[`vertices, edges, length] gives a list of edges whose length is infinite."
+	"ExtractInfiniteEdges[`vertices, edges, length`] gives a list of edges whose length is infinite."
+];
+
+
+ExtractLargeWidthPart::usage = $UsageString[
+	"ExtractLargeWidthPart[`vertices, edges, width`] displays only part of the root where width is large."
+];
+
+
+ExtractLargeWidthEdges::usage = $UsageString[
+	"ExtractLargeWidthEdges[`edges, width`] gives a list of edges whose width is large."
+];
+
+
+ShowVerticesID::usage = $UsageString[
+	"ShowVerticesID[`graphics, id, vertices, edges`] represents a 3-D graphical image with highlighted vertices given veritices ID."
 ];
 
 
@@ -84,7 +110,7 @@ ExtractInfiniteEdges::usage = $UsageString[
 (*Implementation*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Graph3DLength*)
 
 
@@ -99,11 +125,11 @@ Graph3DLength[vts_, edges_, length_]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExtractInfinitePart*)
 
 
-ExtractInfinitePart[vertices_,edges_, length_, color_] := Module[
+ExtractInfinitePart[vertices_, edges_, length_, color_] := Module[
 	{infPositions, infEdges},
 	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
 	infEdges = edges[[infPositions]];
@@ -112,10 +138,35 @@ ExtractInfinitePart[vertices_,edges_, length_, color_] := Module[
 
 
 ExtractInfiniteEdges[edges_, length_] := Module[
-	{infPositions, infEdges},
+	{infPositions},
 	infPositions = Flatten[Position[Round @ Rescale[length], 1]];
-	infEdges = edges[[infPositions]];
-	infEdges
+	edges[[infPositions]]
+]
+
+
+(* ::Subsection:: *)
+(*ExtractLargeWidthPart*)
+
+
+ExtractLargeWidthPart[vertices_, edges_, width_]:= Module[
+	{largeWidthPosition, largeWidthEdges, largeWidth, w, colors, edgeColors},
+	
+	largeWidthPosition = Flatten[Position[Round@Rescale[width], 1]];
+	largeWidthEdges = edges[[largeWidthPosition]];
+	
+	largeWidth = width[[largeWidthPosition]];
+	
+	w = Rescale[largeWidth];
+	colors = ColorData["Rainbow"]/@ w ;
+	edgeColors = Transpose[{colors, Line/@edges}];
+	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
+]
+
+
+ExtractLargeWidthEdges[edges_, width_]:= Module[
+	{largeWidthPosition},
+	largeWidthPosition = Flatten[Position[Round@Rescale[width], 1]];
+	edges[[largeWidthPosition]]
 ]
 
 
@@ -134,6 +185,10 @@ VisualizeRootGraphics3D[vertices_, edges_, width_]:= Module[
 	edgeColors = Transpose[{colors, Line/@edges}];
 	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
 ]
+(*
+VisualizeRootGraphics3D[vertices_, edges_, width_, "Wharl"]:= Module[
+	{r, maxPos, p0},
+	r = (Max @ width) /2*)
 
 
 (* ::Subsection:: *)
