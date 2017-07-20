@@ -73,11 +73,8 @@ Graph3DLength::usage = $UsageString[
 
 
 VisualizeRootGraphics3D::usage = $UsageString[
-	"VisualizeRootGraphics3D[`vertices, edges, color`] represents a three-dimentional graphical image of root."
-];
-
-VisualizeRootGraphics3D::usage = $UsageString[
-	"VisualizeRootGraphics3D[`vertices, edges, width`] represents a three-dimentional graphical image of root and is colored by width measurement."
+	"VisualizeRootGraphics3D[`v`, `e`, `Color`] represents a three-dimentional graphical image of root.\n",
+	"VisualizeRootGraphics3D[`v`, `e`, `width`, \"Color\"] represents a three-dimentional graphical image of root and is colored by width measurement."
 ];
 
 
@@ -92,12 +89,13 @@ ExtractInfiniteEdges::usage = $UsageString[
 
 
 ExtractLargeWidthPart::usage = $UsageString[
-	"ExtractLargeWidthPart[`vertices, edges, width`] displays only part of the root where width is large."
+	"ExtractLargeWidthPart[`v`, `e`, `w`] displays only part of the root given vertices `v` and edges `e` where width `w` is large."
 ];
 
 
 ExtractLargeWidthEdges::usage = $UsageString[
-	"ExtractLargeWidthEdges[`edges, width`] gives a list of edges whose width is large."
+	"ExtractLargeWidthEdges[`e`, `w`] gives a list of edges `e` whose width `w` is large.\n",
+	"ExtractLargeWidthEdges[`e`, `w`, \"Position\"] gives a list of edges `e` and positions {`edges`, `edgeID`} whose width `w` is large."
 ];
 
 
@@ -153,20 +151,26 @@ ExtractLargeWidthPart[vertices_, edges_, width_]:= Module[
 	
 	largeWidthPosition = Flatten[Position[Round@Rescale[width], 1]];
 	largeWidthEdges = edges[[largeWidthPosition]];
-	
 	largeWidth = width[[largeWidthPosition]];
-	
+
 	w = Rescale[largeWidth];
 	colors = ColorData["Rainbow"]/@ w ;
-	edgeColors = Transpose[{colors, Line/@edges}];
+	edgeColors = Transpose[{colors, Line/@largeWidthEdges}];
 	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
 ]
 
 
 ExtractLargeWidthEdges[edges_, width_]:= Module[
 	{largeWidthPosition},
-	largeWidthPosition = Flatten[Position[Round@Rescale[width], 1]];
+	largeWidthPosition = Flatten[Position[Round @ Rescale[width], 1]];
 	edges[[largeWidthPosition]]
+]
+
+
+ExtractLargeWidthEdges[edges_, width_, "Position"]:= Module[
+	{largeWidthPosition},
+	largeWidthPosition = Flatten[Position[Round @ Rescale[width], 1]];
+	{edges[[largeWidthPosition]], largeWidthPosition}
 ]
 
 
@@ -178,7 +182,7 @@ VisualizeRootGraphics3D[vertices_, edges_, color_] :=
 	Graphics3D[
 		{color, GraphicsComplex[vertices, Line/@edges]}, Boxed -> False]
 
-VisualizeRootGraphics3D[vertices_, edges_, width_]:= Module[
+VisualizeRootGraphics3D[vertices_, edges_, width_, "Color"]:= Module[
 	{w, colors, edgeColors},
 	w = Rescale[width];
 	colors = ColorData["Rainbow"]/@ w ;

@@ -73,7 +73,7 @@ $UsageString[str__] :=
 
 
 GraphConvert::usage = $UsageString[
-	"GraphConvert[`a\[UndirectedEdge]b`] convert graph back to list representation {a,b}."
+	"GraphConvert[`a \[UndirectedEdge] b`] convert graph back to list representation {a,b}."
 ];
 
 
