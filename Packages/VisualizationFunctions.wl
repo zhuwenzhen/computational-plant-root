@@ -42,6 +42,9 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	ShowIntersectionPointByVertexPosition,
 	ShowVerticesID,
 	VisualizeVerticesDegree,
+	
+	HighlightGraphics3D,
+	HighlightVertices,
 	ColorMetaEdges3D,
 	Rainbow
 };
@@ -122,6 +125,16 @@ ShowVerticesID::usage = $UsageString[
 
 VisualizeVerticesDegree::usage = $UsageString[
 	"VisualizeVerticesDegree[`graphics`, `id1`, `id2`, `v`, `e`] visualize vertices with degree 3 (in red) and degree 1 (in blue)."
+];
+
+
+HighlightGraphics3D::usage = $UsageString[
+	"HighlightGraphics3D[`graphics`, `id`, `v`, `e`, `Color`] hightlight the 3D graphics by the given vertices id."
+];
+
+
+HighlightVertices::usage = $UsageString[
+	"HighlightVertices[`graphics`, `id`, `v`, `e`, `Color`] hightlight the 3D graphics by the given vertices id."
 ];
 
 
@@ -256,7 +269,7 @@ VisualizeRootGraphics3D[vertices_, edges_, width_, "Wharl"]:= Module[
 	r = (Max @ width) /2*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ShowVerticesID*)
 
 
@@ -288,6 +301,42 @@ ShowVerticesID[graphics_,id_List, vertices_, edges_]:= Block[
 ]
 
 
+(* ::Subsection:: *)
+(*Highlight3DGraphics*)
+
+
+HighlightGraphics3D[graphics_,id_List, vertices_, edges_, Color_]:= Block[
+	{vertex},
+	vertex = vertices[[#]]&/@id;
+	Show[graphics, 
+		Graphics3D[Flatten[{ 
+			PointSize[Medium], Color, Point[vertex]}],
+			Boxed -> False
+		]
+	]	
+]
+
+
+(* ::Subsection:: *)
+(*HighlightVertices*)
+
+
+HighlightVertices[graphics_,id_List, vertices_, edges_, Color_]:= Block[
+	{vertex},
+	vertex = vertices[[#]]&/@id;
+	Show[graphics, 
+		Graphics3D[Flatten[{ 
+			PointSize[0.01], Color, Point[vertex]}],
+			Boxed -> False
+		]
+	]	
+]
+
+
+(* ::Subsection:: *)
+(*VisualizeVerticesDegree*)
+
+
 VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, deg4_List, vertices_, edges_]:= Block[
 	{v1, v3, v4},
 	v1 = vertices[[#]]&/@deg1;
@@ -299,6 +348,21 @@ VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, deg4_List, vertices_, e
 			PointSize[Medium], Red, Point[v3],
 			PointSize[Medium], Green, Point[v1],
 			PointSize[0.01], Orange, Point[v4]}],
+			Boxed -> False
+		]
+	]	
+]
+
+VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, vertices_, edges_]:= Block[
+	{v1, v3},
+	v1 = vertices[[#]]&/@deg1;
+	v3 = vertices[[#]]&/@deg3;
+
+	Show[graphics, 
+		Graphics3D[Flatten[{
+			MapThread[Text[Style[#1, Medium], #2]&, {Join[deg1, deg3], Join[v1,v3]}], 
+			PointSize[Medium], Red, Point[v3],
+			PointSize[Medium], Green, Point[v1]}],
 			Boxed -> False
 		]
 	]	
