@@ -20,14 +20,18 @@
 (*Public*)
 
 
-BeginPackage["RootAnalysis`"];
+BeginPackage["RootAnalysis`", {"OperationFunctions`"}];
 
 
 RootAnalysis`Private`$PublicSymbols={
 	GenerateStem,
 	GenerateBranch,
 	GenerateRoot,
-	RootGraph
+	GenerateDirStem,
+	GenerateDirBranch,
+	GenerateDirRoot,
+	RootGraph,
+	FindWhorlNode
 };
 
 
@@ -75,8 +79,49 @@ RootGraph::usage = $UsageString[
 ];
 
 
+FindWhorlNode::usage = $UsageString[
+	"FindWhorlNode[`v`, `e`, `w`, \"Coordinate\"] gives the whorl node coordinate of a root given vertices `v`, edges `e`, and width `w`.\n",
+	"FindWhorlNode[`v`, `e`, `w`, \"VertexID\"] gives the whorl node Vertex ID of a root given vertices `v`, edges `e`, and width `w`.\n",
+	"FindWhorlNode[`v`, `e`, `w`, \"Edge\"] gives the whorl node edge of a root given  `v`, edges `e`, and width `w`.\n"
+];
+
+
 (* ::Section:: *)
 (*Implementation*)
+
+
+(* ::Subsection:: *)
+(*GenerateDirRoot*)
+
+
+GenerateDirStem[start_, n_]:= 
+	Thread[Range[n] + start - 1 -> Range[n] + start]
+GenerateDirBranch[startNode_, stemEndNode_, n_]:= 
+	Join[{startNode <-> stemEndNode + 1}, GenerateDirStem[stemEndNode + 1, n]]
+GenerateDirRoot[wharlNode_, stemLength_, {seminalLength_, numSeminal_}, {lateralLength_, numLateral_}]/; numLateral < seminalLength - 1:= Module[
+	{stem, seminalList, lateralList, i, j, k, counter, startNodeList, endNodeList, v, step},
+	
+	stem = GenerateDirStem[1, stemLength];
+	(* Generate seminals *)
+	seminalList = ToExpression["s" <> ToString @ #] &/@ Range[numSeminal];
+	seminalList[[1]] = GenerateDirBranch[wharlNode, stemLength + 1, seminalLength];
+	For[ i = 2, i <= numSeminal, i++,
+		seminalList[[i]] = GenerateDirBranch[wharlNode, Last @ Last @ seminalList[[i - 1]], seminalLength]];
+		
+	(* Generate laterals *)
+	counter = Last @ Last @ seminalList[[-1]];
+	lateralList ={};
+	For[j = 1, j <= numSeminal, j++,
+		(* vertices of j-th seminal  *)
+		v = Union @ Flatten @ (seminalList[[j, 2;;All]]/.DirectedEdge->List);	
+		step = Floor[Length[v] / numLateral];
+		startNodeList = Table[v[[step*i]], {i, 1, numLateral}];
+		endNodeList = FoldList[Last @ Last @ GenerateDirBranch[#2, #1, lateralLength]&, counter, startNodeList][[;;-2]];
+		AppendTo[lateralList, MapThread[GenerateDirBranch[#1, #2, lateralLength]&,{startNodeList,endNodeList}] ];
+		counter = Last @ Last @ lateralList[[-1, -1]];
+	];
+	Flatten @ {stem, seminalList, lateralList}
+]
 
 
 (* ::Subsection:: *)
@@ -138,6 +183,50 @@ RootGraph[graphData_]:= Graph[
 				  "Orientation" -> Top,
 				  "RootVertex" -> 1}
 ]
+
+
+(* ::Subsection:: *)
+(*FindWhorlNode*)
+
+
+FindWhorlNode[v_, e_, w_, "VertexID"]:= Module[
+	{maxPos},
+	maxPos = First @ First @ Position[w, Max @ w];
+	e[[maxPos]]
+]
+
+
+FindWhorlNode[v_, e_, w_, "deg3"]:= Module[
+	{candidates, widthCandidates, pos},
+	candidates = FindVertexDegreeN[e, 3]
+]
+
+
+
+(*
+
+FindWhorlNode[v_, e_, w_, "VertexID"]:= Module[
+	{candidates, widthCandidates, pos},
+	candidates = FindVertexDegreeN[e, 3];
+	widthCandidates = w[[candidates]];
+	pos = First @ First @Position[widthCandidates, Max[widthCandidates]];
+	candidates[[pos]]
+]
+FindWhorlNode[v_, e_, w_, "Coordinate"]:= Module[
+	{pos},
+	pos = First @ First @ Position[w, Max[w]];
+	v\[LeftDoubleBracket]First[e\[LeftDoubleBracket]pos\[RightDoubleBracket]]\[RightDoubleBracket]
+]
+FindWhorlNode[v_, e_, w_, "VertexID"]:= Module[
+	{pos},
+	pos = First @ First @ Position[w, Max[w]];
+	First[e\[LeftDoubleBracket]pos\[RightDoubleBracket]]
+]
+FindWhorlNode[v_, e_, w_, "Edge"]:= Module[
+	{pos},
+	pos = First @ First @ Position[w, Max[w]];
+	e\[LeftDoubleBracket]pos\[RightDoubleBracket]
+]*)
 
 
 (* ::Subsection:: *)

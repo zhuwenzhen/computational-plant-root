@@ -35,10 +35,13 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	ExtractInfiniteEdges,
 	ExtractLargeWidthPart,
 	ExtractLargeWidthEdges, 
+	ExtractLargeThicknessPart,
+	ExtractLargeThicknessEdges,
 	RescalingParameter,
 	(*ShowIntersectionPointByIndex,*)
 	ShowIntersectionPointByVertexPosition,
 	ShowVerticesID,
+	VisualizeVerticesDegree,
 	ColorMetaEdges3D,
 	Rainbow
 };
@@ -74,7 +77,9 @@ Graph3DLength::usage = $UsageString[
 
 VisualizeRootGraphics3D::usage = $UsageString[
 	"VisualizeRootGraphics3D[`v`, `e`, `Color`] represents a three-dimentional graphical image of root.\n",
-	"VisualizeRootGraphics3D[`v`, `e`, `width`, \"Color\"] represents a three-dimentional graphical image of root and is colored by width measurement."
+	"VisualizeRootGraphics3D[`v`, `e`, `width`, \"Rainbow\"] represents a three-dimentional graphical image of root and is colored by width measurement.",
+	"VisualizeRootGraphics3D[`v`, `e`, `thickness`, \"Thickness\"] represents a three-dimentional graphical image of root and is colored by `thickness` measurement.",
+	"VisualizeRootGraphics3D[`v`, `e`, `width`, \"Width\"] represents a three-dimentional graphical image of root and is colored by `width` measurement."
 ];
 
 
@@ -99,8 +104,24 @@ ExtractLargeWidthEdges::usage = $UsageString[
 ];
 
 
+ExtractLargeThicknessPart::usage = $UsageString[
+	"ExtractLargeThicknessPart[`v`, `e`, `t`] displays only part of the root given vertices `v` and edges `e` where thickness `t` is large."
+];
+
+
+ExtractLargeThicknessEdges::usage = $UsageString[
+	"ExtractLargeWidthEdges[`e`, `t`] gives a list of edges `e` whose thickness `t` is large.\n",
+	"ExtractLargeWidthEdges[`e`, `t`, \"Position\"] gives a list of edges `e` and positions {`edges`, `edgeID`} whose thickness `t` is large."
+];
+
+
 ShowVerticesID::usage = $UsageString[
 	"ShowVerticesID[`graphics, id, vertices, edges`] represents a 3-D graphical image with highlighted vertices given veritices ID."
+];
+
+
+VisualizeVerticesDegree::usage = $UsageString[
+	"VisualizeVerticesDegree[`graphics`, `id1`, `id2`, `v`, `e`] visualize vertices with degree 3 (in red) and degree 1 (in blue)."
 ];
 
 
@@ -142,7 +163,7 @@ ExtractInfiniteEdges[edges_, length_] := Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExtractLargeWidthPart*)
 
 
@@ -174,7 +195,39 @@ ExtractLargeWidthEdges[edges_, width_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
+(*ExtractLargeThicknessPart*)
+
+
+ExtractLargeThicknessPart[vertices_, edges_, thickness_]:= Module[
+	{largeThicknessPosition, largeThicknessEdges, largeThickness, t, colors, edgeColors},
+	
+	largeThicknessPosition = Flatten[Position[Round@Rescale[thickness], 1]];
+	largeThicknessEdges = edges[[largeThicknessPosition]];
+	largeThickness = thickness[[largeThicknessPosition]];
+
+	t = Rescale[largeThickness];
+	colors = ColorData["Rainbow"]/@ t ;
+	edgeColors = Transpose[{colors, Line/@largeThicknessEdges}];
+	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
+]
+
+
+ExtractLargeThicknessEdges[edges_, thickness_]:= Module[
+	{largeThicknessPosition},
+	largeThicknessPosition = Flatten[Position[Round @ Rescale[thickness], 1]];
+	edges[[largeThicknessPosition]]
+]
+
+
+ExtractLargeThicknessEdges[edges_, thickness_, "Position"]:= Module[
+	{largeThicknessPosition},
+	largeThicknessPosition = Flatten[Position[Round @ Rescale[thickness], 1]];
+	{edges[[largeThicknessPosition]], largeThicknessPosition}
+]
+
+
+(* ::Subsection::Closed:: *)
 (*VisualizeRootGraphics3D*)
 
 
@@ -182,11 +235,19 @@ VisualizeRootGraphics3D[vertices_, edges_, color_] :=
 	Graphics3D[
 		{color, GraphicsComplex[vertices, Line/@edges]}, Boxed -> False]
 
-VisualizeRootGraphics3D[vertices_, edges_, width_, "Color"]:= Module[
+VisualizeRootGraphics3D[vertices_, edges_, width_, "Width"]:= Module[
 	{w, colors, edgeColors},
 	w = Rescale[width];
 	colors = ColorData["Rainbow"]/@ w ;
 	edgeColors = Transpose[{colors, Line/@edges}];
+	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
+]
+
+VisualizeRootGraphics3D[vertices_, edges_, thickness_, "Thickness"]:= Module[
+	{t, colors, edgeColors},
+	t = Rescale[thickness];
+	colors = ColorData["Rainbow"]/@ t;
+	edgeColors = Transpose[{colors, Line /@ edges}];
 	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
 ]
 (*
@@ -195,7 +256,7 @@ VisualizeRootGraphics3D[vertices_, edges_, width_, "Wharl"]:= Module[
 	r = (Max @ width) /2*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ShowVerticesID*)
 
 
@@ -227,7 +288,24 @@ ShowVerticesID[graphics_,id_List, vertices_, edges_]:= Block[
 ]
 
 
-(* ::Subsection:: *)
+VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, deg4_List, vertices_, edges_]:= Block[
+	{v1, v3, v4},
+	v1 = vertices[[#]]&/@deg1;
+	v3 = vertices[[#]]&/@deg3;
+	v4 = vertices[[#]]&/@deg4;
+	Show[graphics, 
+		Graphics3D[Flatten[{
+			MapThread[Text[Style[#1, Medium], #2]&, {Join[deg1, deg3, deg4], Join[v1,v3,v4]}], 
+			PointSize[Medium], Red, Point[v3],
+			PointSize[Medium], Green, Point[v1],
+			PointSize[0.01], Orange, Point[v4]}],
+			Boxed -> False
+		]
+	]	
+]
+
+
+(* ::Subsection::Closed:: *)
 (*ShowIntersectionPointByVertexPosition*)
 
 
@@ -263,7 +341,7 @@ ShowIntersectionPointByVertexPosition[graphics_,index_List, vertices_, loopEdges
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ColorMetaEdge3D*)
 
 
