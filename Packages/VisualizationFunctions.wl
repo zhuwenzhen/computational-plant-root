@@ -41,8 +41,7 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	(*ShowIntersectionPointByIndex,*)
 	ShowIntersectionPointByVertexPosition,
 	ShowVerticesID,
-	VisualizeVerticesDegree,
-	
+	VisualizeVerticesDegree,	
 	HighlightGraphics3D,
 	HighlightVertices,
 	ColorMetaEdges3D,
@@ -142,6 +141,13 @@ HighlightVertices::usage = $UsageString[
 (*Implementation*)
 
 
+(* ::Subsection:: *)
+(*heatMap*)
+
+
+heatMap[n_]:= Hue[0.7n]
+
+
 (* ::Subsection::Closed:: *)
 (*Graph3DLength*)
 
@@ -176,7 +182,7 @@ ExtractInfiniteEdges[edges_, length_] := Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ExtractLargeWidthPart*)
 
 
@@ -188,7 +194,8 @@ ExtractLargeWidthPart[vertices_, edges_, width_]:= Module[
 	largeWidth = width[[largeWidthPosition]];
 
 	w = Rescale[largeWidth];
-	colors = ColorData["Rainbow"]/@ w ;
+	(*colors = ColorData["Rainbow"]/@ w ;*)
+	colors = heatMap/@(1 - w) ;
 	edgeColors = Transpose[{colors, Line/@largeWidthEdges}];
 	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
 ]
@@ -208,7 +215,7 @@ ExtractLargeWidthEdges[edges_, width_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ExtractLargeThicknessPart*)
 
 
@@ -220,7 +227,8 @@ ExtractLargeThicknessPart[vertices_, edges_, thickness_]:= Module[
 	largeThickness = thickness[[largeThicknessPosition]];
 
 	t = Rescale[largeThickness];
-	colors = ColorData["Rainbow"]/@ t ;
+	colors = heatMap/@(1 - t);
+	(*colors = ColorData["Rainbow"]/@ t ;*)
 	edgeColors = Transpose[{colors, Line/@largeThicknessEdges}];
 	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
 ]
@@ -240,7 +248,7 @@ ExtractLargeThicknessEdges[edges_, thickness_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*VisualizeRootGraphics3D*)
 
 
@@ -251,7 +259,7 @@ VisualizeRootGraphics3D[vertices_, edges_, color_] :=
 VisualizeRootGraphics3D[vertices_, edges_, width_, "Width"]:= Module[
 	{w, colors, edgeColors},
 	w = Rescale[width];
-	colors = ColorData["Rainbow"]/@ w ;
+	colors = heatMap/@(1 - w) ;
 	edgeColors = Transpose[{colors, Line/@edges}];
 	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
 ]
@@ -259,7 +267,7 @@ VisualizeRootGraphics3D[vertices_, edges_, width_, "Width"]:= Module[
 VisualizeRootGraphics3D[vertices_, edges_, thickness_, "Thickness"]:= Module[
 	{t, colors, edgeColors},
 	t = Rescale[thickness];
-	colors = ColorData["Rainbow"]/@ t;
+	colors = heatMap/@(1 - t);
 	edgeColors = Transpose[{colors, Line /@ edges}];
 	Graphics3D[GraphicsComplex[vertices, edgeColors], Boxed -> False]
 ]
@@ -269,7 +277,7 @@ VisualizeRootGraphics3D[vertices_, edges_, width_, "Wharl"]:= Module[
 	r = (Max @ width) /2*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ShowVerticesID*)
 
 
@@ -317,7 +325,7 @@ HighlightGraphics3D[graphics_,id_List, vertices_, edges_, Color_]:= Block[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*HighlightVertices*)
 
 
@@ -333,7 +341,7 @@ HighlightVertices[graphics_,id_List, vertices_, edges_, Color_]:= Block[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*VisualizeVerticesDegree*)
 
 
