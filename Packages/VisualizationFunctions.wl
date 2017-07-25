@@ -182,7 +182,7 @@ ExtractInfiniteEdges[edges_, length_] := Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExtractLargeWidthPart*)
 
 
@@ -215,7 +215,7 @@ ExtractLargeWidthEdges[edges_, width_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExtractLargeThicknessPart*)
 
 
@@ -248,7 +248,7 @@ ExtractLargeThicknessEdges[edges_, thickness_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*VisualizeRootGraphics3D*)
 
 
@@ -309,7 +309,7 @@ ShowVerticesID[graphics_,id_List, vertices_, edges_]:= Block[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Highlight3DGraphics*)
 
 

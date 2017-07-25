@@ -31,7 +31,8 @@ RootAnalysis`Private`$PublicSymbols={
 	GenerateDirBranch,
 	GenerateDirRoot,
 	RootGraph,
-	FindWhorlNode
+	FindWhorlNode,
+	VertexToEdgeIndex
 };
 
 
@@ -86,11 +87,16 @@ FindWhorlNode::usage = $UsageString[
 ];
 
 
+VertexToEdgeIndex::usage = $UsageString[
+	"VertexToEdgeIndex[`v`, `e`] converts a sequence of vertices `v` to indices of edge `e`"
+];
+
+
 (* ::Section:: *)
 (*Implementation*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*GenerateDirRoot*)
 
 
@@ -124,7 +130,7 @@ GenerateDirRoot[wharlNode_, stemLength_, {seminalLength_, numSeminal_}, {lateral
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*GenerateRoot*)
 
 
@@ -171,7 +177,7 @@ GenerateRoot[wharlNode_, stemLength_, {seminalLength_, numSeminal_}, {lateralLen
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*RootGraph*)
 
 
@@ -185,7 +191,7 @@ RootGraph[graphData_]:= Graph[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FindWhorlNode*)
 
 
@@ -230,13 +236,25 @@ FindWhorlNode[v_, e_, w_, "Edge"]:= Module[
 
 
 (* ::Subsection:: *)
+(*VertexToEdgeIndex*)
+
+
+VertexToEdgeIndex[vtx_List, edges_]:= Module[
+	{edgeList},
+	(* Apply Sort to make v1 < v2 in {v1, v2} pair so it could be found in orginal edges *)
+	edgeList = Sort /@ Partition[vtx, 2, 1];
+	Flatten[Position[edges, #] &/@ edgeList]
+]
+
+
+(* ::Subsection::Closed:: *)
 (*End*)
 
 
 End[];
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*End*)
 
 
