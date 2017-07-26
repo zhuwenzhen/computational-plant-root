@@ -45,7 +45,8 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	HighlightGraphics3D,
 	HighlightVertices,
 	ColorMetaEdges3D,
-	Rainbow
+	Rainbow,
+	heatMap
 };
 
 
@@ -148,7 +149,7 @@ HighlightVertices::usage = $UsageString[
 heatMap[n_]:= Hue[0.7n]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Graph3DLength*)
 
 
@@ -163,7 +164,7 @@ Graph3DLength[vts_, edges_, length_]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ExtractInfinitePart*)
 
 
@@ -248,7 +249,7 @@ ExtractLargeThicknessEdges[edges_, thickness_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*VisualizeRootGraphics3D*)
 
 
@@ -413,7 +414,7 @@ ShowIntersectionPointByVertexPosition[graphics_,index_List, vertices_, loopEdges
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ColorMetaEdge3D*)
 
 
