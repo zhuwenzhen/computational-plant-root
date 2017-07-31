@@ -94,7 +94,12 @@ DisconnectGraph::usage = $UsageString[
 
 
 nextVertex::usage = $UsageString[
-	"nextVertex[`id`, `edges`] finds the next vertex of a given vertex id from edges."
+	"nextVertex[`id`, `edges`] finds the next vertex of a given vertex `id` from `edges`."
+]
+
+
+DeleteEdge::usage = $UsageString[
+	"DeleteEdge[`edges`, {`id1`, `id2`}, {`thickness`, `width`, `length`}] delete edge {`id1`, `id2`}, from `edges`."
 ]
 
 
