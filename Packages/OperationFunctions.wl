@@ -93,11 +93,16 @@ DisconnectGraph::usage = $UsageString[
 ];
 
 
+nextVertex::usage = $UsageString[
+	"nextVertex[`id`, `edges`] finds the next vertex of a given vertex id from edges."
+]
+
+
 (* ::Section:: *)
 (*Implementation*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*GraphConvert*)
 
 
@@ -108,7 +113,7 @@ ConvertListToEdge[{a_, b_}]:= a <-> b;
 ConvertListToEdge[list_List]:= ConvertListToEdge/@list
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FindVertexDegreePosition*)
 
 
@@ -121,7 +126,7 @@ FindVertexDegreePosition[graphData_List, n_]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*FindVertexDegreeN*)
 
 
@@ -133,7 +138,7 @@ FindVertexDegreeN[graphData_List, n_] := Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DisconnectGraph - Return graph*)
 
 
@@ -147,7 +152,7 @@ DisconnectGraph[graphData_, "Graph"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DisconnectGraph - Return data*)
 
 
@@ -183,7 +188,7 @@ DisconnectGraph[graphData_, "Data"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DisconnectGraph - Return Vertices*)
 
 
@@ -194,7 +199,7 @@ DisconnectGraph[graphData_, "Vertices"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ConnectedEdges*)
 
 
@@ -210,7 +215,7 @@ ConnectedEdges[metaGraphData_List] := Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ManipulateMetaEdge*)
 
 
@@ -228,13 +233,25 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 	]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DeleteEdge*)
 
 
 DeleteEdge[edges_, metaEdge_, {thickness_, width_, length_}] := Block[
 	{deletePosition, newEdges, newThickness, newWidth, newLength},
 	(*newEdges = Complement[edges, metaEdge];*)
+	deletePosition = Flatten[Position[edges, #]&/@ metaEdge, 1];
+	newEdges = Delete[edges, deletePosition];
+	newThickness = Delete[thickness, deletePosition];
+	newWidth = Delete[width, deletePosition];
+	newLength = Delete[length, deletePosition];
+	{newEdges,{newThickness, newWidth, newLength}}
+]
+
+
+DeleteEdge[edges_, {id1_, id2_}, {thickness_, width_, length_}] := Block[
+	{metaEdge, deletePosition, newEdges, newThickness, newWidth, newLength},
+	metaEdge = Sort /@ Partition[ExtractEdge[id1, id2, edges], 2, 1];
 	deletePosition = Flatten[Position[edges, #]&/@ metaEdge, 1];
 	newEdges = Delete[edges, deletePosition];
 	newThickness = Delete[thickness, deletePosition];
@@ -400,7 +417,7 @@ ConnectEdge[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}]
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*DuplicateEdge*)
 
 
@@ -569,7 +586,7 @@ DuplicateEdge[e1_, e2_, e3_, e4_, e_, vertices_, edges_, {thickness_, width_, le
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Extract Edge*)
 
 

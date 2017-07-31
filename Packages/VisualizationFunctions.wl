@@ -142,14 +142,14 @@ HighlightVertices::usage = $UsageString[
 (*Implementation*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*heatMap*)
 
 
 heatMap[n_]:= Hue[0.7n]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Graph3DLength*)
 
 
@@ -164,7 +164,7 @@ Graph3DLength[vts_, edges_, length_]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ExtractInfinitePart*)
 
 
@@ -249,7 +249,7 @@ ExtractLargeThicknessEdges[edges_, thickness_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*VisualizeRootGraphics3D*)
 
 
@@ -342,7 +342,7 @@ HighlightVertices[graphics_,id_List, vertices_, edges_, Color_]:= Block[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*VisualizeVerticesDegree*)
 
 
@@ -357,6 +357,22 @@ VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, deg4_List, vertices_, e
 			PointSize[Medium], Red, Point[v3],
 			PointSize[Medium], Green, Point[v1],
 			PointSize[0.01], Orange, Point[v4]}],
+			Boxed -> False
+		]
+	]	
+]
+
+VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, deg4_List, vertices_, "No Label"]:= Block[
+	{v1, v3, v4},
+	v1 = vertices[[#]]&/@deg1;
+	v3 = vertices[[#]]&/@deg3;
+	v4 = vertices[[#]]&/@deg4;
+
+	Show[graphics, 
+		Graphics3D[Flatten[{ 
+			PointSize[Medium], Orange, Point[v4],
+			PointSize[Medium], Red, Point[v3],
+			PointSize[Medium], Green, Point[v1]}],
 			Boxed -> False
 		]
 	]	
@@ -414,7 +430,7 @@ ShowIntersectionPointByVertexPosition[graphics_,index_List, vertices_, loopEdges
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*ColorMetaEdge3D*)
 
 
