@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (* ::Title:: *)
-(*Operation Functions for Corn Root Study*)
+(*Operation Functions for Plant Root Study*)
 
 
 (* ::Subtitle:: *)
@@ -14,6 +14,10 @@
 
 (* ::Section:: *)
 (*To Do*)
+
+
+(* ::Text:: *)
+(*Fix ConnectEdge*)
 
 
 (* ::Section:: *)
@@ -40,6 +44,7 @@ OperationFunctions`Private`$PublicSymbols = {
 	nextVertex,
 	findEdge,
 	findEdgeIndex,
+	iConnectEdge,
 	ConnectEdge,
 	FindConnectionVerticesID,
 	SortGraph,
@@ -72,8 +77,8 @@ $UsageString[str__] :=
 	(StringTemplate[StringJoin[{str}]] /. {TemplateSlot[s_] :> $ArgString[s]})[]
 
 
-GraphConvert::usage = $UsageString[
-	"GraphConvert[`a \[UndirectedEdge] b`] convert graph back to list representation {a,b}."
+ConvertEdgeToList::usage = $UsageString[
+	"ConvertEdgeToList[`a \[UndirectedEdge] b`] convert graph back to list representation {a,b}."
 ];
 
 
@@ -107,7 +112,7 @@ DeleteEdge::usage = $UsageString[
 (*Implementation*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*GraphConvert*)
 
 
@@ -116,6 +121,7 @@ ConvertEdgeToList[list_List] := ConvertEdgeToList/@list
 
 ConvertListToEdge[{a_, b_}]:= a <-> b;
 ConvertListToEdge[list_List]:= ConvertListToEdge/@list
+
 
 
 (* ::Subsection::Closed:: *)
@@ -238,7 +244,7 @@ ManipulateMetaEdge[graphData_List, groupedEdges_] :=
 	]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*DeleteEdge*)
 
 
@@ -266,11 +272,22 @@ DeleteEdge[edges_, {id1_, id2_}, {thickness_, width_, length_}] := Block[
 ]
 
 
+DeleteEdge[edges_, e_List, {thickness_, width_, length_}] := Block[
+	{deletePosition, newEdges, newThickness, newWidth, newLength},
+	deletePosition = Flatten[Position[edges, #]&/@ e, 1];
+	newEdges = Delete[edges, deletePosition];
+	newThickness = Delete[thickness, deletePosition];
+	newWidth = Delete[width, deletePosition];
+	newLength = Delete[length, deletePosition];
+	{newEdges,{newThickness, newWidth, newLength}}
+]
+
+
 (* ::Subsection:: *)
 (*ConnectEdge*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Select Vertices With Degree == n*)
 
 
@@ -302,7 +319,7 @@ SelectVerticesWithDegree[vertices_, edges_, degreeNumber_, "Vertices"]:= Block[
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Select Disconnected Part*)
 
 
@@ -334,7 +351,7 @@ SelectDisconnectedPart[edges_, "PairMetaEdge"] := Block[
 ]	
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*SelectEndPoints*)
 
 
@@ -342,14 +359,14 @@ SelectEndPoints[metaEdgePair_, "ID"] :=
 	SelectVerticesWithDegree[metaEdgePair, 1, "ID"]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*getMeasure*)
 
 
 getMeasure[id_, thickness_, width_, length_]:= {thickness[[id]],width[[id]],length[[id]]}
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*NextVertex*)
 
 
@@ -365,7 +382,7 @@ findEdge[id_, edges_]:= Flatten[Select[edges, MemberQ[#, id]&]]
 findEdgeIndex[edge_, edges_]:= Select[edges, MemberQ[#, edge]&]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*FindConnectionVerticesID*)
 
 
@@ -401,24 +418,41 @@ FindConnectionVerticesID[partEdges_, vertices_, edges_] := Block[
 (*Connect*)
 
 
-ConnectEdge[id1_, id2_, {edges_List, {thickness_List, width_List, length_List}}] := Module[
-	{thickness1, thickness2, width1, width2, length1, length2, \[Epsilon] = 0.001, t, w, l, twoEdges, edgePositions,
+iConnectEdge[{id1_, id2_}, {edges_List, {thickness_List, width_List, length_List}}] := Module[
+	{thickness1, thickness2, width1, width2, length1, length2, t, w, l, twoEdges, edgePositions,
 	newThickness = thickness, newWidth = width, newLength = length, newEdges = edges},
 	
-	twoEdges = findEdge[#, edges] &/@ {id1, id2};
+	twoEdges = findEdge[#, edges] &/@ Sort@{id1, id2};
+	If[Length/@twoEdges == {2, 2}, 
+		twoEdges = Sort/@ twoEdges, 
+		If[(Length/@twoEdges)[[1]] == 2, 
+			twoEdges = Sort/@ Join[{twoEdges[[1]], twoEdges[[2, 1;;2]]}],
+			twoEdges = Sort/@Join[{twoEdges[[1,1;;2]], twoEdges[[2,1;;2]]}]
+		]
+	];
 	
-	edgePositions = Flatten[Position[edges, #] &/@ twoEdges];
+	edgePositions = Flatten[Position[edges, #] &/@ (Sort/@twoEdges)];
 	
 	{{thickness1, width1, length1}, {thickness2, width2, length2}} = getMeasure[#, thickness, width, length]&/@ edgePositions;
 	
 	{t, w, l} = {Mean[{thickness1, thickness2}], Mean[{width1, width2}], Mean[{length1, length2}]};
 	
-	AppendTo[newEdges, {id1, id2}];
+	AppendTo[newEdges, Sort @{id1, id2}];
 	AppendTo[newThickness, t];
 	AppendTo[newWidth, w];
 	AppendTo[newLength, l];
 	
 	{newEdges, {newThickness, newWidth, newLength}}
+]
+
+
+ConnectEdge[newEdges_List, {edges_List,  {thickness_List, width_List, length_List}}]:= Block[
+	{dummyNewEdges, dummyNewThickness, dummyNewWidth, dummyNewLength},
+	{dummyNewEdges, dummyNewThickness, dummyNewWidth, dummyNewLength} = {edges, thickness, width, length};
+	Do[
+	{dummyNewEdges, {dummyNewThickness, dummyNewWidth, dummyNewLength}} = 
+		iConnectEdge[Sort@newEdges[[i]], {dummyNewEdges, {dummyNewThickness,  dummyNewWidth, dummyNewLength}}],
+	{i, Length[newEdges]}]
 ]
 
 

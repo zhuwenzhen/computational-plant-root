@@ -46,7 +46,8 @@ VisualizationFunctions`Private`$PublicSymbols = {
 	HighlightVertices,
 	ColorMetaEdges3D,
 	Rainbow,
-	heatMap
+	heatMap,
+	HighlightEdge
 };
 
 
@@ -249,7 +250,7 @@ ExtractLargeThicknessEdges[edges_, thickness_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*VisualizeRootGraphics3D*)
 
 
@@ -346,7 +347,7 @@ HighlightVertices[graphics_,id_List, vertices_, edges_, Color_]:= Block[
 (*VisualizeVerticesDegree*)
 
 
-VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, deg4_List, vertices_, edges_]:= Block[
+VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, deg4_List, vertices_]:= Block[
 	{v1, v3, v4},
 	v1 = vertices[[#]]&/@deg1;
 	v3 = vertices[[#]]&/@deg3;
@@ -394,7 +395,15 @@ VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, vertices_, edges_]:= Bl
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
+(*ShowNewEdge*)
+
+
+HighlightEdge[graphics_, newEdge_List, v_]:= 
+	Show[graphics, Graphics3D[{Thick, Red, GraphicsComplex[v,Line[newEdge]]}]]	
+
+
+(* ::Subsection:: *)
 (*ShowIntersectionPointByVertexPosition*)
 
 
@@ -430,7 +439,7 @@ ShowIntersectionPointByVertexPosition[graphics_,index_List, vertices_, loopEdges
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ColorMetaEdge3D*)
 
 
