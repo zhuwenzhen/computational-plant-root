@@ -96,6 +96,135 @@ VertexToEdgeIndex::usage = $UsageString[
 (*Implementation*)
 
 
+(* ::Subsection:: *)
+(*BFS*)
+
+
+BFS[graph_, startNode_]:= Block[
+	{V, u, queue, visited, frontier, i, counter, result ={}, outVetices, distance},
+	
+	V = VertexList[graph];
+	(* initialize *)
+	visited = Association[Thread[ V -> Table[0, Length[V]]]];
+	distance = Association[Thread[ V -> Table[0, Length[V]]]];
+	visited [startNode] = 1;
+	queue = {startNode};
+	
+	(*counter = 0;*)
+	While[Length[queue] != 0,
+		u = First[queue];  (* Dequeue *)
+		(*Print["queue ", queue];*)
+		queue = Delete[queue, 1]; (* Dequeue *)
+		(*Print["u ", u];*)
+		AppendTo[result, u];		
+		(*Print["queue ", queue];*)
+		
+		frontier = VertexOutComponent[graph, u, 1] ;
+		For[i = 1, i <= Length[frontier], i++,
+			If[visited[frontier[[i]]] == 0,
+				visited[frontier[[i]]] = 1;
+				(*Print["u2 ", u, " u.d = ", distance[u]];*)
+				distance[frontier[[i]]] = distance[u] + 1; 
+				AppendTo[queue, frontier[[i]]];	
+			];	
+		];
+		visited[u] = 1
+	];
+	{result, distance}
+]
+
+
+(* ::Subsection:: *)
+(*DFS*)
+
+
+DFS[g_, startNode_]:= Block[
+	{V, stack = {}, visited, current, i, frontier, counter = 0, result = {}, parent},	
+	V = VertexList[g];
+	(* initialize *)
+	visited = Association[Thread[ V -> Table[0, Length[V]]]];
+	AppendTo[stack, startNode]; (* Let S be a stack *)
+	parent = Association[Thread[ V -> Table[0, Length[V]]]];
+	
+	While[Length[stack] != 0 && counter <= 50 ,
+		current = Last[stack]; (* v = S.pop() *)	
+		stack = Delete[stack, -1];
+		counter++;
+	
+		If[visited[current] == 0, (* if v is not labeled as visited: *)
+			visited[current] = 1; (* label v as visited *)
+			AppendTo[result, current];
+			If[VertexDegree[g, current] == 1, AppendTo[result, "Nil"]];	
+			frontier = AdjacencyList[g, current];
+			(*Print["frontier: ", frontier];*)
+			If[Length[frontier]==0, Print["Nil"]];
+			For[i = 1, i <= Length[frontier], i++,
+				If[visited[frontier[[i]]] == 0,
+					(*visited[frontier\[LeftDoubleBracket]i\[RightDoubleBracket]] = 1;*)
+					AppendTo[stack, frontier[[i]]];
+					parent[frontier[[i]]] = current;
+				];	
+			]
+			(*Print["Stack: ", stack];*)
+		];
+	];
+	{result, parent}
+]
+
+
+(* ::Subsection:: *)
+(*Reverse Tree*)
+
+
+ReverseTree[g_]:= DirectedEdge @@@ (Reverse/@ List@@@g)
+
+
+(* ::Subsection:: *)
+(*AutomateLabeling*)
+
+
+
+labeling[g_, root_, distance_]:= Block[
+	{V, current, visited, queue, frontier, label, nextVtx, labels, i, result, distanceFromTheLeaf, 
+	distanceOrdering, frontierLabels},
+	
+	V = VertexList[g];
+	
+	visited = Association[Thread[ V -> Table[0, Length[V]]]];
+	visited[root] = 1;
+	
+	label = Association[Thread[ V -> Table[1, Length[V]]]];
+	queue = {root};
+	Print[label];
+	While[Length[queue] != 0,
+		current = First[queue];
+		queue = Delete[queue, 1];
+		
+		frontier = DeleteCases[VertexOutComponent[g, current, 1], current];
+		distanceFromTheLeaf = distance /@ frontier;
+		distanceOrdering = Ordering[distanceFromTheLeaf, All, Greater] - 1;
+		(*Print[distanceOrdering]*);
+		
+		frontierLabels = label[current] + distanceOrdering;
+		
+		Do[label[frontier[[k]]] = frontierLabels[[k]], {k,1,Length[frontier]}];
+		
+		(*Print[frontierLabels];*)
+		(*Print[frontier]*);
+		For[i = 1, i <= Length[frontier], i++,
+			If[visited[frontier[[i]]] == 0,
+				visited[frontier[[i]]] = 1;
+				(*Print["u2 ", u, " u.d = ", distance[u]];*)			
+				AppendTo[queue, frontier[[i]]];	
+			];	
+		];
+		visited[current] = 1
+	];
+	label
+	
+]
+
+
 (* ::Subsection::Closed:: *)
 (*GenerateDirRoot*)
 
@@ -187,7 +316,7 @@ RootGraph[graphData_]:= Graph[
 	ImagePadding -> 10, 
 	GraphLayout -> {"LayeredDigraphEmbedding",
 				  "Orientation" -> Top,
-				  "RootVertex" -> 1}
+				  "RootVertex" -> First@First@graphData}
 ]
 
 
@@ -235,7 +364,7 @@ FindWhorlNode[v_, e_, w_, "Edge"]:= Module[
 ]*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*VertexToEdgeIndex*)
 
 
