@@ -146,7 +146,7 @@ DFS[g_, startNode_]:= Block[
 	AppendTo[stack, startNode]; (* Let S be a stack *)
 	parent = Association[Thread[ V -> Table[0, Length[V]]]];
 	
-	While[Length[stack] != 0 && counter <= 50 ,
+	While[Length[stack] != 0,
 		current = Last[stack]; (* v = S.pop() *)	
 		stack = Delete[stack, -1];
 		counter++;
@@ -168,7 +168,7 @@ DFS[g_, startNode_]:= Block[
 			(*Print["Stack: ", stack];*)
 		];
 	];
-	{result, parent}
+	DirectedEdge @@@ Rest[Transpose[{Values[parent],Keys[parent]}]]
 ]
 
 
@@ -221,45 +221,70 @@ ReverseTree[g_]:= DirectedEdge @@@ (Reverse/@ List@@@g)
 (*AutomateLabeling*)
 
 
-
-labeling[g_, root_, distance_]:= Block[
+Labeling[g_, root_, distance_]:= Block[
 	{V, current, visited, queue, frontier, label, nextVtx, labels, i, result, distanceFromTheLeaf, 
 	distanceOrdering, frontierLabels},
 	
 	V = VertexList[g];
-	
 	visited = Association[Thread[ V -> Table[0, Length[V]]]];
 	visited[root] = 1;
 	
 	label = Association[Thread[ V -> Table[1, Length[V]]]];
 	queue = {root};
-	Print[label];
+
 	While[Length[queue] != 0,
 		current = First[queue];
-		queue = Delete[queue, 1];
-		
+		queue = Delete[queue, 1];	
 		frontier = DeleteCases[VertexOutComponent[g, current, 1], current];
 		distanceFromTheLeaf = distance /@ frontier;
 		distanceOrdering = Ordering[distanceFromTheLeaf, All, Greater] - 1;
-		(*Print[distanceOrdering]*);
-		
-		frontierLabels = label[current] + distanceOrdering;
-		
-		Do[label[frontier[[k]]] = frontierLabels[[k]], {k,1,Length[frontier]}];
-		
-		(*Print[frontierLabels];*)
-		(*Print[frontier]*);
+		frontierLabels = label[current] + distanceOrdering;	
+		Do[label[frontier[[k]]] = frontierLabels[[k]], {k, 1, Length[frontier]}];
+
 		For[i = 1, i <= Length[frontier], i++,
 			If[visited[frontier[[i]]] == 0,
-				visited[frontier[[i]]] = 1;
-				(*Print["u2 ", u, " u.d = ", distance[u]];*)			
+				visited[frontier[[i]]] = 1;		
 				AppendTo[queue, frontier[[i]]];	
 			];	
 		];
 		visited[current] = 1
 	];
 	label
+]
+
+
+edgeLabel[{l1_,l2_}]:= l2
+
+LabelingEdge[g_, root_, distance_]:= Block[
+	{V, E, current, visited, queue, frontier, label, nextVtx, labels, i, result, distanceFromTheLeaf, 
+	distanceOrdering, frontierLabels, edgeLabels},
+	E = List @@@g;
+	V = VertexList[g];
+	visited = Association[Thread[ V -> Table[0, Length[V]]]];
+	visited[root] = 1;
 	
+	label = Association[Thread[ V -> Table[1, Length[V]]]];
+	queue = {root};
+
+	While[Length[queue] != 0,
+		current = First[queue];
+		queue = Delete[queue, 1];	
+		frontier = DeleteCases[VertexOutComponent[g, current, 1], current];
+		distanceFromTheLeaf = distance /@ frontier;
+		distanceOrdering = Ordering[distanceFromTheLeaf, All, Greater] - 1;
+		frontierLabels = label[current] + distanceOrdering;	
+		Do[label[frontier[[k]]] = frontierLabels[[k]], {k, 1, Length[frontier]}];
+
+		For[i = 1, i <= Length[frontier], i++,
+			If[visited[frontier[[i]]] == 0,
+				visited[frontier[[i]]] = 1;		
+				AppendTo[queue, frontier[[i]]];	
+			];	
+		];
+		visited[current] = 1
+	];
+	edgeLabels = edgeLabel/@({labels[#[[1]]],labels[#[[2]]]} &/@ E);
+	Transpose[{Sort/@ E, edgeLabels}]
 ]
 
 
