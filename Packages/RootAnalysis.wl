@@ -172,6 +172,44 @@ DFS[g_, startNode_]:= Block[
 ]
 
 
+(* ::Text:: *)
+(*From CLRS Page 603*)
+
+
+(*myDFS[g_,s_]:=Block[
+	{result = {}, V, parents, color, discovered, frontier, i, time},
+	V = VertexList[g];
+	
+	(*initialize*)
+	parents = Association[Thread[V \[Rule] Table[0, Length[V]]]];
+	color = Association[Thread[V \[Rule] Table[0, Length[V]]]];
+	discovered = Association[Thread[V \[Rule] Table[0, Length[V]]]];
+	
+	time = 0;
+	For[i = 1, i < Length[V],
+		i++,
+		dfsVisit[g, vtxList[V[i]], time, color, depth]
+	];
+	result
+]
+
+dfsVisit[g_, u_, time_, color_, depth_]:= Block[
+	{frontier, i},
+	time = time + 1;
+	depth[u] = time;
+	color[u] = 1;
+	frontier = AdjacencyList[g, u];
+	For[i = 1, i \[LessEqual] Length[frontier], i++,
+		If[color[frontier\[LeftDoubleBracket]i\[RightDoubleBracket]] \[Equal] 0,
+			dfsVisit[g, u, time, color, depth]
+		]
+	];
+	color[u] = 2;
+	time = time + 1;
+	[u] = time;	
+]*)
+
+
 (* ::Subsection:: *)
 (*Reverse Tree*)
 
