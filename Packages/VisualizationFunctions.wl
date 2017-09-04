@@ -125,7 +125,7 @@ ShowVerticesID::usage = $UsageString[
 
 
 VisualizeVerticesDegree::usage = $UsageString[
-	"VisualizeVerticesDegree[`graphics`, `id1`, `id2`, `v`, `e`] visualize vertices with degree 3 (in red) and degree 1 (in blue)."
+	"VisualizeVerticesDegree[`graphics`, `id1`, `id3`, `id4` `v`] visualize vertices with degree 3 (in red) and degree 1 (in blue)."
 ];
 
 
@@ -250,7 +250,7 @@ ExtractLargeThicknessEdges[edges_, thickness_, "Position"]:= Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*VisualizeRootGraphics3D*)
 
 
@@ -279,7 +279,7 @@ VisualizeRootGraphics3D[vertices_, edges_, width_, "Wharl"]:= Module[
 	r = (Max @ width) /2*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*ShowVerticesID*)
 
 
@@ -298,7 +298,7 @@ ShowVerticesID[graphics_,id_, vertices_, edges_]:= Block[
 ]
 
 ShowVerticesID[graphics_,id_List, vertices_, edges_]:= Block[
-	{vertex},
+	{vertex, x, y, z},
 	vertex = vertices[[#]]&/@id;
 	Show[graphics, 
 		Graphics3D[Flatten[{
@@ -309,6 +309,23 @@ ShowVerticesID[graphics_,id_List, vertices_, edges_]:= Block[
 		]
 	]	
 ]
+
+ShowVerticesID[graphics_,id_List, vertices_, edges_, "Scale", \[Delta]_]:= Block[
+	{vertex, x, y, z},
+	vertex = vertices[[#]]&/@id;
+	{x, y, z} = Transpose[vertex];
+	
+	Show[graphics, 
+		Graphics3D[Flatten[{
+			MapThread[Text[Style[#1, Medium], #2]&, {id,vertex}], 
+			PointSize[Medium], Red, 
+			Point[vertex]}],
+			Boxed -> False
+		],
+		PlotRange-> Transpose@{First[Transpose[MinMax/@{x,y,z}]]-\[Delta],Last[Transpose[MinMax/@{x,y,z}]]+\[Delta]}
+	]	
+]
+
 
 
 (* ::Subsection::Closed:: *)
@@ -396,11 +413,15 @@ VisualizeVerticesDegree[graphics_, deg1_List, deg3_List, vertices_, edges_]:= Bl
 
 
 (* ::Subsection:: *)
-(*ShowNewEdge*)
+(*HighlightEdge*)
 
 
 HighlightEdge[graphics_, newEdge_List, v_]:= 
 	Show[graphics, Graphics3D[{Thick, Red, GraphicsComplex[v,Line[newEdge]]}]]	
+
+
+HighlightEdge[graphics_, newEdge_List, v_, color_]:= 
+	Show[graphics, Graphics3D[{Thick, color, GraphicsComplex[v,Line[newEdge]]}]]	
 
 
 (* ::Subsection:: *)

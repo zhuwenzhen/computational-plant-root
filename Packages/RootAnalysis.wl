@@ -32,7 +32,9 @@ RootAnalysis`Private`$PublicSymbols={
 	GenerateDirRoot,
 	RootGraph,
 	FindWhorlNode,
-	VertexToEdgeIndex
+	VertexToEdgeIndex,
+	VertexListToEdgeList,
+	RootLabeling
 };
 
 
@@ -153,11 +155,11 @@ DFS[g_, startNode_]:= Block[
 	
 		If[visited[current] == 0, (* if v is not labeled as visited: *)
 			visited[current] = 1; (* label v as visited *)
-			AppendTo[result, current];
-			If[VertexDegree[g, current] == 1, AppendTo[result, "Nil"]];	
+			(*AppendTo[result, current];*)
+			(*If[VertexDegree[g, current] == 1, AppendTo[result, "Nil"]];*)	
 			frontier = AdjacencyList[g, current];
 			(*Print["frontier: ", frontier];*)
-			If[Length[frontier]==0, Print["Nil"]];
+			(*If[Length[frontier]==0, Print["Nil"]];*)
 			For[i = 1, i <= Length[frontier], i++,
 				If[visited[frontier[[i]]] == 0,
 					(*visited[frontier\[LeftDoubleBracket]i\[RightDoubleBracket]] = 1;*)
@@ -286,6 +288,61 @@ LabelingEdge[g_, root_, distance_]:= Block[
 	edgeLabels = edgeLabel/@({labels[#[[1]]],labels[#[[2]]]} &/@ E);
 	Transpose[{Sort/@ E, edgeLabels}]
 ]
+
+
+(* ::Subsection:: *)
+(*RootLabeling*)
+
+
+RootLabeling[g_, root_]:= Block[
+	{dfsResult, reversedResult, leaves, resParallelBFS, distanceTable },
+	
+	Print["Step 1: DFS" ];
+	dfsResult = DFS[g, root];
+	reversedResult = ReverseTree[dfsResult];
+	
+	Print["Step 2: BFS" ];
+	leaves = FindVertexDegreeN[EdgeList @ dfsResult, 1];
+	resParallelBFS = BFS[reversedResult,#][[2]]&/@Rest[leaves];
+	distanceTable = Association@Thread[VertexList @ reversedResult -> Max/@Transpose[Values/@resParallelBFS]];
+	Print["Step 3: Labeling" ];
+	LabelingEdge[dfsResult, root, distanceTable]
+]
+
+RootLabeling[g_, root_, "Directed Graph"]:= Block[
+	{dfsResult, reversedResult, leaves, resParallelBFS, distanceTable },
+	Print["Step 1: DFS" ];
+	dfsResult = DFS[g, root];
+	reversedResult = ReverseTree[dfsResult];
+	
+	Print["Step 2: BFS" ];
+	leaves = FindVertexDegreeN[EdgeList @ dfsResult, 1];
+	resParallelBFS = BFS[reversedResult,#][[2]]&/@Rest[leaves];	
+	distanceTable = Association@Thread[VertexList @ reversedResult -> Max/@Transpose[Values/@resParallelBFS]];
+	
+	Print["Step 3: Labeling" ];
+	Graph[dfsResult, VertexLabels->Normal[Labeling[dfsResult, root, distanceTable]]]
+]
+
+
+(* ::Subsection:: *)
+(*GroupCycles*)
+
+
+VertexListToEdgeList[v_]:=
+	Sort /@ Partition[v, 2, 1]
+
+
+FindIntersectionFromCycle[cycle_]:= 
+	Select[Tally @ Flatten @ Values[cycle], #[[2]] > 1 &][[All,1]]
+
+
+iGroupCycles[cycle_Association, intersection_Integer]:=
+	Union @ Flatten[Select[Values @ cycle, ContainsAny[#, {intersection}]&]]
+
+
+GroupCycles[cycle_Association, intersection_List]:=
+	Union[Sort/@(Flatten/@(iGroupCycles[cycle, #]&/@ intersection))]
 
 
 (* ::Subsection::Closed:: *)
