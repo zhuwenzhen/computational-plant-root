@@ -34,14 +34,15 @@ RootAnalysis`Private`$PublicSymbols={
 	FindWhorlNode,
 	VertexToEdgeIndex,
 	VertexListToEdgeList,
-	RootLabeling
+	RootLabeling,
+	DFS,BFS,ReverseTree,LabelingEdge
 };
 
 
 Unprotect/@RootAnalysis`Private`$PublicSymbols;
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Usage*)
 
 
@@ -258,7 +259,7 @@ Labeling[g_, root_, distance_]:= Block[
 edgeLabel[{l1_,l2_}]:= l2
 
 LabelingEdge[g_, root_, distance_]:= Block[
-	{V, E, current, visited, queue, frontier, label, nextVtx, labels, i, result, distanceFromTheLeaf, 
+	{V, E, current, visited, queue, frontier, label, nextVtx, i, result, distanceFromTheLeaf, 
 	distanceOrdering, frontierLabels, edgeLabels},
 	E = List @@@g;
 	V = VertexList[g];
@@ -285,7 +286,7 @@ LabelingEdge[g_, root_, distance_]:= Block[
 		];
 		visited[current] = 1
 	];
-	edgeLabels = edgeLabel/@({labels[#[[1]]],labels[#[[2]]]} &/@ E);
+	edgeLabels = edgeLabel/@({label[#[[1]]],label[#[[2]]]} &/@ E);
 	Transpose[{Sort/@ E, edgeLabels}]
 ]
 
