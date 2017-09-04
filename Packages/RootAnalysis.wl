@@ -35,7 +35,17 @@ RootAnalysis`Private`$PublicSymbols={
 	VertexToEdgeIndex,
 	VertexListToEdgeList,
 	RootLabeling,
-	DFS,BFS,ReverseTree,LabelingEdge
+	DFS,
+	BFS,
+	ReverseTree,
+	LabelingEdge,
+	FindIntersectionFromCycle,
+	iGroupCycles,
+	GroupCycles,
+	HyperEdgeToEdges,
+	VertexListToEdgeList,
+	FindBranchingPts,
+	getBranch
 };
 
 
@@ -96,10 +106,31 @@ VertexToEdgeIndex::usage = $UsageString[
 
 
 (* ::Section:: *)
-(*Implementation*)
+(*Root Labeling*)
 
 
 (* ::Subsection:: *)
+(*GetBranch*)
+
+
+getBranch[brPt_, e_, radical_]:= Block[
+	{V, visited, frontier, root, ep, gp, cp, cpEdges},
+	V = Sort @ VertexList[UndirectedEdge @@@ e];
+	visited =  Association[Thread[ V -> Table[0, Length[V]]]];
+	Do[visited[radical[[i]]]=1, {i, 1, Length[radical]}];
+	
+	frontier = AdjacencyList[e, brPt];
+	root = First @ Select[frontier, visited[#]== 0 &];
+	ep = DeleteCases[e, Sort@{brPt, root}];
+	If[Length[e]-Length[ep] == 1, Print["Truly Deleted"]]; 
+	gp = Graph[UndirectedEdge @@@ ep];
+	cp = ConnectedComponents[gp];
+	cpEdges = DeleteCases[Select[e, ContainsAny[#, cp[[-1]] ] &],{brPt,_}];
+	{cpEdges, root}
+]
+
+
+(* ::Subsection::Closed:: *)
 (*BFS*)
 
 
@@ -171,7 +202,7 @@ DFS[g_, startNode_]:= Block[
 			(*Print["Stack: ", stack];*)
 		];
 	];
-	DirectedEdge @@@ Rest[Transpose[{Values[parent],Keys[parent]}]]
+	DeleteCases[DirectedEdge @@@ Rest[Transpose[{Values[parent],Keys[parent]}]],0\[DirectedEdge]_]
 ]
 
 
@@ -213,7 +244,7 @@ dfsVisit[g_, u_, time_, color_, depth_]:= Block[
 ]*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Reverse Tree*)
 
 
@@ -291,7 +322,7 @@ LabelingEdge[g_, root_, distance_]:= Block[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*RootLabeling*)
 
 
@@ -330,20 +361,37 @@ RootLabeling[g_, root_, "Directed Graph"]:= Block[
 (*GroupCycles*)
 
 
+FindIntersectionFromCycle[cycle_]:= 
+	Select[Tally @ Flatten @ Values[cycle], #[[2]] > 1 &][[All,1]]
+	
+iGroupCycles[cycle_Association, intersection_Integer]:=
+	Union @ Flatten[Select[Values @ cycle, ContainsAny[#, {intersection}]&]]
+	
+GroupCycles[cycle_Association, intersection_List]:=
+	Union[Sort/@(Flatten/@(iGroupCycles[cycle, #]&/@ intersection))]
+
+
+(* ::Subsection:: *)
+(*HyperEdgeToEdges*)
+
+
 VertexListToEdgeList[v_]:=
 	Sort /@ Partition[v, 2, 1]
 
 
-FindIntersectionFromCycle[cycle_]:= 
-	Select[Tally @ Flatten @ Values[cycle], #[[2]] > 1 &][[All,1]]
+HyperEdgeToEdges[hyperEdge_, e_]:= 
+	Flatten[VertexListToEdgeList[ExtractEdge[Sequence@@hyperEdge,e]], 1]
 
 
-iGroupCycles[cycle_Association, intersection_Integer]:=
-	Union @ Flatten[Select[Values @ cycle, ContainsAny[#, {intersection}]&]]
+(* ::Subsection:: *)
+(*Find Branching Pts*)
 
 
-GroupCycles[cycle_Association, intersection_List]:=
-	Union[Sort/@(Flatten/@(iGroupCycles[cycle, #]&/@ intersection))]
+FindBranchingPts[root_,id_]:= Select[root, MemberQ[id,#]&]
+
+
+(* ::Section:: *)
+(*Generating Root*)
 
 
 (* ::Subsection::Closed:: *)
