@@ -16,6 +16,10 @@
 (*To Do*)
 
 
+(* ::Item:: *)
+(*Figure out GetBranch *)
+
+
 (* ::Section:: *)
 (*Public*)
 
@@ -125,12 +129,16 @@ getBranch[brPt_, e_, radical_]:= Block[
 	If[Length[e]-Length[ep] == 1, Print["Truly Deleted"]]; 
 	gp = Graph[UndirectedEdge @@@ ep];
 	cp = ConnectedComponents[gp];
+	(*For some reason, cp[[-1]] is correct. 
+	the deleted root is still in there After Select[__, ContainsAny[]], 
+	so have to delete it again. Try to figure out how to properly do this later.
+	*)
 	cpEdges = DeleteCases[Select[e, ContainsAny[#, cp[[-1]] ] &],{brPt,_}];
 	{cpEdges, root}
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*BFS*)
 
 
@@ -202,7 +210,8 @@ DFS[g_, startNode_]:= Block[
 			(*Print["Stack: ", stack];*)
 		];
 	];
-	DeleteCases[DirectedEdge @@@ Rest[Transpose[{Values[parent],Keys[parent]}]],0\[DirectedEdge]_]
+	(* The previous version has a bug here, since the parents were all initialized with 0. *)
+	DeleteCases[DirectedEdge @@@ Rest[Transpose[{Values[parent],Keys[parent]}]], 0\[DirectedEdge] _]
 ]
 
 
@@ -322,7 +331,7 @@ LabelingEdge[g_, root_, distance_]:= Block[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*RootLabeling*)
 
 
@@ -334,8 +343,8 @@ RootLabeling[g_, root_]:= Block[
 	reversedResult = ReverseTree[dfsResult];
 	
 	Print["Step 2: BFS" ];
-	leaves = FindVertexDegreeN[EdgeList @ dfsResult, 1];
-	resParallelBFS = BFS[reversedResult,#][[2]]&/@Rest[leaves];
+	leaves = DeleteCases[FindVertexDegreeN[EdgeList @ dfsResult, 1], root];
+	resParallelBFS = BFS[reversedResult,#][[2]]&/@ leaves;
 	distanceTable = Association@Thread[VertexList @ reversedResult -> Max/@Transpose[Values/@resParallelBFS]];
 	Print["Step 3: Labeling" ];
 	LabelingEdge[dfsResult, root, distanceTable]
@@ -348,9 +357,9 @@ RootLabeling[g_, root_, "Directed Graph"]:= Block[
 	reversedResult = ReverseTree[dfsResult];
 	
 	Print["Step 2: BFS" ];
-	leaves = FindVertexDegreeN[EdgeList @ dfsResult, 1];
-	resParallelBFS = BFS[reversedResult,#][[2]]&/@Rest[leaves];	
-	distanceTable = Association@Thread[VertexList @ reversedResult -> Max/@Transpose[Values/@resParallelBFS]];
+	leaves = DeleteCases[ FindVertexDegreeN[EdgeList @ dfsResult, 1], root];
+	resParallelBFS = BFS[reversedResult,#][[2]]&/@ leaves;	
+	distanceTable = Association @ Thread[VertexList @ reversedResult -> Max/@Transpose[Values/@resParallelBFS]];
 	
 	Print["Step 3: Labeling" ];
 	Graph[dfsResult, VertexLabels->Normal[Labeling[dfsResult, root, distanceTable]]]
