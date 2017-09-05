@@ -49,6 +49,7 @@ RootAnalysis`Private`$PublicSymbols={
 	HyperEdgeToEdges,
 	VertexListToEdgeList,
 	FindBranchingPts,
+	CheckBranchPoints,
 	getBranch
 };
 
@@ -114,26 +115,54 @@ VertexToEdgeIndex::usage = $UsageString[
 
 
 (* ::Subsection:: *)
+(*CheckBranchPoints*)
+
+
+CheckBranchPoints[brPts_, e_, radical_]:= Block[
+	{V, visited, frontier, root, ep, gp, cp, print, ii},
+	V = Sort @ VertexList[UndirectedEdge @@@ e];
+	visited =  Association[Thread[ V -> Table[0, Length[V]]]];
+	Do[visited[radical[[i]]]=1, {i, 1, Length[radical]}];
+	
+	Table[
+		print = PrintTemporary[Dynamic[ii], " / ", Length[brPts], " (", Dynamic[100. * ii / Length[brPts]], "%)"];
+		frontier = AdjacencyList[e, brPts[[ii]]];
+		root = First @ Select[frontier, visited[#]==0 &];
+		ep = DeleteCases[e, Sort @ {brPts[[ii]], root}];
+		gp = Graph[UndirectedEdge @@@ ep];
+		cp = ConnectedComponents[gp];
+		NotebookDelete[print];
+		cp[[-1]],
+		{ii, 1, Length[brPts]}
+	]
+]
+
+
+(* ::Subsection:: *)
 (*GetBranch*)
 
 
 getBranch[brPt_, e_, radical_]:= Block[
-	{V, visited, frontier, root, ep, gp, cp, cpEdges},
+	{V, visited, frontier, root, ep, gp, cp, cpEdges, adj},
 	V = Sort @ VertexList[UndirectedEdge @@@ e];
 	visited =  Association[Thread[ V -> Table[0, Length[V]]]];
 	Do[visited[radical[[i]]]=1, {i, 1, Length[radical]}];
 	
 	frontier = AdjacencyList[e, brPt];
+	adj = Select[frontier, visited[#]== 0 &];
+	(*If[Length[adj]\[Equal] 1, 
+		root = First @ Select[frontier, visited[#]\[Equal] 0 &],
+		root = Last @ Select[frontier, visited[#]\[Equal] 0 &];*)
 	root = First @ Select[frontier, visited[#]== 0 &];
-	ep = DeleteCases[e, Sort@{brPt, root}];
+	ep = DeleteCases[e, Sort @ {brPt, root}];
 	If[Length[e]-Length[ep] == 1, Print["Truly Deleted"]]; 
 	gp = Graph[UndirectedEdge @@@ ep];
 	cp = ConnectedComponents[gp];
-	(*For some reason, cp[[-1]] is correct. 
+	(*For some reason, cp[[-1]] is correctd. 
 	the deleted root is still in there After Select[__, ContainsAny[]], 
 	so have to delete it again. Try to figure out how to properly do this later.
 	*)
-	cpEdges = DeleteCases[Select[e, ContainsAny[#, cp[[-1]] ] &],{brPt,_}];
+	cpEdges = Select[Select[e, ContainsAny[#, cp[[-1]] ] &],!MemberQ[#,brPt]&];
 	{cpEdges, root}
 ]
 
@@ -336,17 +365,18 @@ LabelingEdge[g_, root_, distance_]:= Block[
 
 
 RootLabeling[g_, root_]:= Block[
-	{dfsResult, reversedResult, leaves, resParallelBFS, distanceTable },
+	{dfsResult, reversedResult, leaves, resParallelBFS, distanceTable, print },
 	
-	Print["Step 1: DFS" ];
+	print = Print["Step 1: DFS" ];
 	dfsResult = DFS[g, root];
 	reversedResult = ReverseTree[dfsResult];
 	
-	Print["Step 2: BFS" ];
+	print = Print["Step 2: BFS" ];
 	leaves = DeleteCases[FindVertexDegreeN[EdgeList @ dfsResult, 1], root];
 	resParallelBFS = BFS[reversedResult,#][[2]]&/@ leaves;
 	distanceTable = Association@Thread[VertexList @ reversedResult -> Max/@Transpose[Values/@resParallelBFS]];
-	Print["Step 3: Labeling" ];
+	print = Print["Step 3: Labeling" ];
+	NotebookDelete[print];
 	LabelingEdge[dfsResult, root, distanceTable]
 ]
 
